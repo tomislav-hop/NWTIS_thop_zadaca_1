@@ -87,6 +87,7 @@ public class ObradaZahtjeva extends Thread {
                 if (mKomanda != null) {
                     if (pauzaServera == 1) {
                         System.out.println("NESTO ULAZI U SERVER DOK JE PAUZIRAN!");
+                        System.out.println("Sada treba javiti gresku klijentu za to sta je poslo dok je pauzirano");
                         
                     }
                     
