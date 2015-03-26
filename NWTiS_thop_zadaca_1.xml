@@ -8,7 +8,7 @@
 <entry key="adminDatoteka">NWTiS_administratori.xml</entry>
 <entry key="brojDretvi">6</entry>
 <entry key="razmakDretvi">10</entry>
-<entry key="intervalDretve">30</entry>
+<entry key="intervalDretve">2</entry>
 <entry key="pauzaProblema">3</entry>
 <entry key="brojPokusajaProblema">7</entry>
 </properties>

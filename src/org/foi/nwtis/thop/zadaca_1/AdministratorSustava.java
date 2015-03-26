@@ -5,9 +5,13 @@
  */
 package org.foi.nwtis.thop.zadaca_1;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.foi.nwtis.thop.konfiguracije.Konfiguracija;
+import org.foi.nwtis.thop.konfiguracije.KonfiguracijaApstraktna;
+import org.foi.nwtis.thop.konfiguracije.NemaKonfiguracije;
 
 /**
  *
@@ -49,12 +53,6 @@ public class AdministratorSustava {
 
     public void pokreniAdministratora() {
 
-        /*String server = mParametri.group(1);
-        int port = Integer.parseInt(mParametri.group(2));
-        String korisnik = mParametri.group(3);
-        String lozinka = mParametri.group(4);
-        String komanda = "";*/
-
         if (mParametri.group(6).equals("pause")) {
             System.out.println("PAUZA");
             saljiZahtjev("PAUSE");
@@ -84,14 +82,20 @@ public class AdministratorSustava {
 
     public void saljiZahtjev(String komanda) {
         SlanjeZahtjeva sz = new SlanjeZahtjeva();
-
         sz.setServer(this.mParametri.group(1));
         sz.setPort(Integer.parseInt(this.mParametri.group(2)));
         sz.setKorisnik(this.mParametri.group(3));
         sz.setLozinka(this.mParametri.group(4));
         sz.setBrojPonavljanja(1);
         sz.setCekaj(0);
+        
+        sz.setBrojPokusajaProblema(1);
+        sz.setPauzaProblema(0);
+        sz.setIntervalDretve(0);
+        
         sz.setDobivenaKomanda(komanda);
+
+
         sz.start();
     }
 }

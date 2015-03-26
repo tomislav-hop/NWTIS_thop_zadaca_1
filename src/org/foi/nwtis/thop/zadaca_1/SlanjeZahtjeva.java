@@ -9,6 +9,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -28,8 +31,9 @@ public class SlanjeZahtjeva extends Thread {
     private int brojPonavljanja;
     private int cekaj;
     private String dobivenaKomanda;
-    private int brojPokusaja;
-    private int vrijemeSpavanja;
+    private int brojPokusajaProblema;
+    private int pauzaProblema;
+    private int intervalDretve;
 
     @Override
     public void interrupt() {
@@ -41,25 +45,34 @@ public class SlanjeZahtjeva extends Thread {
         InputStream is = null;
         OutputStream os = null;
         Socket socket = null;
-        int brojNeuspjelihPokusaja;
         boolean spavanje = false;
+        boolean porukaPrimljena = false;
 
         //Ponovi slanje koliko puta je zadano
         for (int i = 0; i < brojPonavljanja; i++) {
+            DateFormat dateFormat = new SimpleDateFormat("YYYY.MM.dd hh:mm:ss");
+            Date pocetnoVrijeme = new Date();
+            //System.out.println("POCETNO VRIJEME JE: " + dateFormat.format(pocetnoVrijeme));
 
-            brojNeuspjelihPokusaja = 0;
-            System.out.println("Ponavljanje broj: " + i);
+            //TESTIRANJE TAJMERA
+            /*try {
+             TimeUnit.SECONDS.sleep(10);
+             } catch (InterruptedException ex) {
+             Logger.getLogger(SlanjeZahtjeva.class.getName()).log(Level.SEVERE, null, ex);
+             }*/
+            //System.out.println("Ponavljanje broj: " + i);
+            int brojNeuspjelihPokusaja = 0;
+
+            try {
+                TimeUnit.SECONDS.sleep(cekaj);
+            } catch (InterruptedException ex) {
+                Logger.getLogger(SlanjeZahtjeva.class.getName()).log(Level.SEVERE, null, ex);
+            }
 
             while (true) {
-                if(brojNeuspjelihPokusaja > 0){
-                System.out.println("brojNeuspjelihPokusajaj: " + brojNeuspjelihPokusaja);
-                }
+                //System.out.println("PROLAZ BROJ: " + brojNeuspjelihPokusaja);
+
                 spavanje = false;
-                try {
-                    TimeUnit.SECONDS.sleep(cekaj);
-                } catch (InterruptedException ex) {
-                    Logger.getLogger(SlanjeZahtjeva.class.getName()).log(Level.SEVERE, null, ex);
-                }
                 try {
 
                     socket = new Socket(server, port);
@@ -81,12 +94,14 @@ public class SlanjeZahtjeva extends Thread {
                     while (true) {
                         int znak = is.read();
                         if (znak == -1) {
+                            porukaPrimljena = true;
                             break;
                         }
                         sb.append((char) znak);
+
                     }
 
-                    System.out.println(sb.toString());
+                    System.out.println("\nPrimljena poruka:\n----------------------------------------------------------\n" + sb.toString());
 
                 } catch (IOException ex) {
                     Logger.getLogger(SlanjeZahtjeva.class.getName()).log(Level.SEVERE, null, ex);
@@ -113,18 +128,32 @@ public class SlanjeZahtjeva extends Thread {
                 if (socket != null) {
                     try {
                         socket.close();
-                        //this.stanje = StanjeDretve.Slobodna;
                     } catch (IOException ex) {
                         Logger.getLogger(ObradaZahtjeva.class.getName()).log(Level.SEVERE, null, ex);
                     }
                 }
-
-                if (brojNeuspjelihPokusaja == brojPokusaja) {
+                if (brojNeuspjelihPokusaja == brojPokusajaProblema) {
+                    Date zavrsnoVrijeme = new Date();
+                    intervalFix(zavrsnoVrijeme, pocetnoVrijeme);
+                    //System.out.println("POCETNO VRIJEME JE: " + dateFormat.format(zavrsnoVrijeme));
+                    System.out.println("Server ne odgovara! Prekid rada.");
                     break;
                 }
+                
+                 if (porukaPrimljena) {
+                    Date zavrsnoVrijeme = new Date();
+                    brojNeuspjelihPokusaja=0;
+                    intervalFix(zavrsnoVrijeme, pocetnoVrijeme);
+                    //System.out.println("POCETNO VRIJEME JE: " + dateFormat.format(zavrsnoVrijeme));
+                    break;
+                }
+
                 if (spavanje) {
+                    int duzinaSpavanja = (brojNeuspjelihPokusaja + 1) * pauzaProblema;
+                    //if(duzinaSpavanja<=)
+                    //TODO PROVJERI KAK SE OVO TREBA PONASATI
                     try {
-                        TimeUnit.SECONDS.sleep(vrijemeSpavanja);
+                        TimeUnit.SECONDS.sleep(duzinaSpavanja);
                     } catch (InterruptedException ex) {
                         Logger.getLogger(SlanjeZahtjeva.class.getName()).log(Level.SEVERE, null, ex);
                     }
@@ -132,6 +161,22 @@ public class SlanjeZahtjeva extends Thread {
             }
         }
 
+    }
+
+    public void intervalFix(Date zavrsnoVrijeme, Date pocetnoVrijeme) {
+        long razlikaVremena = zavrsnoVrijeme.getTime() - pocetnoVrijeme.getTime();
+                    //System.out.println("Trajalo je: " + razlikaVremena);
+        //System.out.println("INTERVAL DRETVE: " + intervalDretve);
+
+        if (razlikaVremena < intervalDretve * 1000) {
+            long pricekajJos = intervalDretve * 1000 - razlikaVremena;
+            //System.out.println("PRICEKAJ JOS: " + pricekajJos);
+            try {
+                sleep(pricekajJos);
+            } catch (InterruptedException ex) {
+                Logger.getLogger(SlanjeZahtjeva.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
     }
 
     @Override
@@ -171,12 +216,16 @@ public class SlanjeZahtjeva extends Thread {
         this.dobivenaKomanda = dobivenaKomanda;
     }
 
-    public void setBrojPokusaja(int brojPokusaja) {
-        this.brojPokusaja = brojPokusaja;
+    public void setBrojPokusajaProblema(int brojPokusajaProblema) {
+        this.brojPokusajaProblema = brojPokusajaProblema;
     }
 
-    public void setVrijemeSpavanja(int vrijemeSpavanja) {
-        this.vrijemeSpavanja = vrijemeSpavanja;
+    public void setPauzaProblema(int pauzaProblema) {
+        this.pauzaProblema = pauzaProblema;
+    }
+
+    public void setIntervalDretve(int intervalDretve) {
+        this.intervalDretve = intervalDretve;
     }
 
 }

@@ -29,6 +29,7 @@ public class KlijentSustava {
     private int brPonavljanja = 1;
     private int cekaj = 0;
 
+
     public KlijentSustava(String parametri) throws Exception {
         this.parametri = parametri;
         mParametri = provjeraParametara(parametri);
@@ -70,6 +71,8 @@ public class KlijentSustava {
         try {
             konfig = KonfiguracijaApstraktna.preuzmiKonfiguraciju(datoteka);
 
+            
+
             if (this.mParametri.group(6) != null) {
                 int cekajBrojSekundi = Integer.parseInt(this.mParametri.group(6));
                 System.out.println("CEKAJ: " + cekajBrojSekundi + " SEKUNDI");
@@ -105,6 +108,14 @@ public class KlijentSustava {
                 } catch (InterruptedException ex) {
                     Logger.getLogger(KlijentSustava.class.getName()).log(Level.SEVERE, null, ex);
                 }
+
+                int brPokusaja = Integer.parseInt(konfig.dajPostavku("brojPokusajaProblema"));
+                //System.out.println("BROJ POKUSAJA = " + brPokusaja);
+                int pauzaProblema = Integer.parseInt(konfig.dajPostavku("pauzaProblema"));
+                //System.out.println("PAUZA PROBLEMA = " + pauzaProblema);
+                int intervalDretve = Integer.parseInt(konfig.dajPostavku("intervalDretve"));
+                //System.out.println("INTERVAL DRETVE = " + intervalDretve);
+                
                 SlanjeZahtjeva sz = new SlanjeZahtjeva();
                 //sz.setKonfig(konfig);
                 sz.setServer(server);
@@ -112,10 +123,11 @@ public class KlijentSustava {
                 sz.setBrojPonavljanja(brPonavljanja);
                 sz.setCekaj(cekaj);
                 sz.setKorisnik(this.mParametri.group(3));
-                sz.setBrojPokusaja(Integer.parseInt(konfig.dajPostavku("brojPokusajaProblema")));
-                sz.setVrijemeSpavanja(Integer.parseInt(konfig.dajPostavku("pauzaProblema")));
                 sz.setLozinka("");
                 sz.setDobivenaKomanda("");
+                sz.setBrojPokusajaProblema(brPokusaja);
+                sz.setPauzaProblema(pauzaProblema);
+                sz.setIntervalDretve(intervalDretve);
                 sz.start();
             }
         } catch (NemaKonfiguracije ex) {

@@ -92,6 +92,8 @@ public class ServerSustava implements Slusac{
             while (true) {
                 Socket socket = ss.accept();
                 ObradaZahtjeva oz = dajSlobodnuDretvu(dretve, brojDretvi);
+                
+                //EVENT LISTENER
 
                 if (oz == null) {
                     oz = new ObradaZahtjeva(tg, "ERROR");
@@ -103,6 +105,9 @@ public class ServerSustava implements Slusac{
                     brojacDretvi++;
                     oz.setStanje(ObradaZahtjeva.StanjeDretve.Zauzeta);
                     oz.setSocket(socket);
+                    /*if(pauzaServera == 1){
+                        oz.setPorukaGreske("ERROR 10; Server je pauziran");
+                    }*/
                     oz.setPauzaServera(pauzaServera);
                     oz.slusac = this;
 
@@ -165,7 +170,13 @@ public class ServerSustava implements Slusac{
     @Override
     public void pauza(int p) {
         pauzaServera = p;
-        System.out.println("Postavljanje pauze na vrijednost: " + p);
+        if(p == 1)
+        {
+            System.out.println("Pauziranje servera.");
+        }
+        else{
+            System.out.println("Start servera.");}
+        
     }
 
 }
