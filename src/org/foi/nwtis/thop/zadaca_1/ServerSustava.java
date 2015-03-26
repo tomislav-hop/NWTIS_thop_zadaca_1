@@ -92,9 +92,6 @@ public class ServerSustava implements Slusac{
             while (true) {
                 Socket socket = ss.accept();
                 ObradaZahtjeva oz = dajSlobodnuDretvu(dretve, brojDretvi);
-                
-                //EVENT LISTENER
-                ProbaSlusac ps = new ProbaSlusac();
 
                 if (oz == null) {
                     oz = new ObradaZahtjeva(tg, "ERROR");
@@ -107,7 +104,6 @@ public class ServerSustava implements Slusac{
                     oz.setStanje(ObradaZahtjeva.StanjeDretve.Zauzeta);
                     oz.setSocket(socket);
                     oz.setPauzaServera(pauzaServera);
-                    oz.addPropertyChangeListener(ps);
                     oz.slusac = this;
 
                     new Thread(oz).start();

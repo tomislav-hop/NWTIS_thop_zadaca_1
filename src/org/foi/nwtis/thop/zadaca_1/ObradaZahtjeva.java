@@ -26,71 +26,65 @@ import org.foi.nwtis.thop.konfiguracije.Konfiguracija;
  */
 public class ObradaZahtjeva extends Thread {
 
-    //LISTENER ZA PAUZIRANJE SERVERA VARIJABLE
-    public static final String PROP_SAMPLE_PROPERTY = "sampleProperty";
-    private String sampleProperty;
-    private PropertyChangeSupport propertySupport;
-    ///////////////////////////////////////
-
     public enum StanjeDretve {
-        
+
         Slobodna, Zauzeta
     };
-    
+
     private Konfiguracija konfig;
     private Socket socket;
     private StanjeDretve stanje;
     private String porukaGreske = "";
     protected Matcher mKomanda;
-    private int pauzaServera = 0;  
-    
+    private int pauzaServera = 0;
+
     public Slusac slusac;
-    
+
     public ObradaZahtjeva(ThreadGroup group, String name) {
         super(group, name);
         this.stanje = StanjeDretve.Slobodna;
-
-        //LISTENER
-        propertySupport = new PropertyChangeSupport(this);
     }
-    
+
     @Override
     public void interrupt() {
         //this.stanje = StanjeDretve.Slobodna;
         super.interrupt(); //To change body of generated methods, choose Tools | Templates.
     }
-    
+
     @Override
     public void run() {
-        
+
         InputStream is = null;
         OutputStream os = null;
-        
+
         try {
             is = socket.getInputStream();
             os = socket.getOutputStream();
             StringBuilder sb = new StringBuilder();
-            
+
             while (true) {
                 int znak = is.read();
                 if (znak == -1) {
                     break;
                 }
+
+                if (is.available() > 0) {
+                    break;
+                }
                 sb.append((char) znak);
-                
+
             }
-            
+
             String poruka = null;
-            //Slusac slusac = new Slusac;
             if (porukaGreske.equals("")) {
                 mKomanda = provjeraParametara(sb.toString());
                 if (mKomanda != null) {
                     if (pauzaServera == 1) {
                         System.out.println("NESTO ULAZI U SERVER DOK JE PAUZIRAN!");
                         System.out.println("Sada treba javiti gresku klijentu za to sta je poslo dok je pauzirano");
-                        
+
                     }
-                    
+
                     if (mKomanda.group(7).equals("TIME") && pauzaServera == 0) {
                         System.out.println("Primljena poruka: " + sb.toString() + "Dretva: " + this.getName());
                         DateFormat dateFormat = new SimpleDateFormat("YYYY.MM.dd hh:mm:ss");
@@ -102,40 +96,33 @@ public class ObradaZahtjeva extends Thread {
                         poruka = "KOMANDA POSLANA JE: " + mKomanda.group(7);
                         if (mKomanda.group(7).equals("PAUSE")) {
                             System.out.println("SERVER PAUZIRAN!!!!");
-                            
                             slusac.pauza(1);
-                            this.setSampleProperty("PAUSE");
-                            this.setPauzaServera(1);
-                        }
-                        else if (mKomanda.group(7).equals("START")) {
+                        } else if (mKomanda.group(7).equals("START")) {
                             System.out.println("SERVER STARTA!!!!");
-                            
+
                             slusac.pauza(0);
-                            //this.setSampleProperty("PAUSE");
-                            //this.setPauzaServera(1);
                         }
 
-                        //this.
                     }
                     /*else{
                      System.out.println("NESTO NE VALJA!");}*/
-                    
+
                 } else {
                     poruka = "ERROR 10; Komanda koju ste poslali nije ispravna";
                 }
             } else {
                 poruka = porukaGreske;
             }
-            
+
             if (poruka != null) {
                 os.write(poruka.getBytes());
                 os.flush();
             }
-            
+
         } catch (IOException ex) {
             Logger.getLogger(ObradaZahtjeva.class.getName()).log(Level.SEVERE, null, ex);
         }
-        
+
         if (is != null) {
             try {
                 is.close();
@@ -143,7 +130,7 @@ public class ObradaZahtjeva extends Thread {
                 Logger.getLogger(ObradaZahtjeva.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
-        
+
         if (os != null) {
             try {
                 os.close();
@@ -151,12 +138,14 @@ public class ObradaZahtjeva extends Thread {
                 Logger.getLogger(ObradaZahtjeva.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
-        
-        try {
-            socket.close();
-            //this.stanje = StanjeDretve.Slobodna;
-        } catch (IOException ex) {
-            Logger.getLogger(ObradaZahtjeva.class.getName()).log(Level.SEVERE, null, ex);
+
+        if (socket != null) {
+            try {
+                socket.close();
+                //this.stanje = StanjeDretve.Slobodna;
+            } catch (IOException ex) {
+                Logger.getLogger(ObradaZahtjeva.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
 
         /*try {
@@ -166,46 +155,46 @@ public class ObradaZahtjeva extends Thread {
          }*/
         this.stanje = StanjeDretve.Slobodna;
     }
-    
+
     @Override
     public synchronized void start() {
         super.start(); //To change body of generated methods, choose Tools | Templates.
     }
-    
+
     public void setKonfig(Konfiguracija konfig) {
         this.konfig = konfig;
     }
-    
+
     public void setSocket(Socket socket) {
         this.socket = socket;
     }
-    
+
     public void setStanje(StanjeDretve stanje) {
         this.stanje = stanje;
     }
-    
+
     public StanjeDretve getStanje() {
         return stanje;
     }
-    
+
     public void setPorukaGreske(String porukaGreske) {
         this.porukaGreske = porukaGreske;
     }
-    
+
     public int getPauzaServera() {
         return pauzaServera;
     }
-    
+
     public void setPauzaServera(int pauzaServera) {
         this.pauzaServera = pauzaServera;
     }
-    
+
     public Matcher provjeraParametara(String p) {
         //TODO txt datoteka
         //String sintaksa = "USER ([^\\\\s]+);(TIME);$";
         //String sintaksa = "USER ([^\\\\]+)(; PASSWD ([^\\\\]+))?;([A-Z]+);$";
         String sintaksa = "USER ([^\\\\]+)(;)?(( PASSWD )?([^\\\\]+)?)?(;)([A-Z]+);$";
-        
+
         Pattern pattern = Pattern.compile(sintaksa);
         Matcher m = pattern.matcher(p);
         boolean status = m.matches();
@@ -215,25 +204,5 @@ public class ObradaZahtjeva extends Thread {
             System.out.println("Ne odgovara!");
             return null;
         }
-    }
-
-    //KOD ZA LISTENERA SA PREDAVANJA
-    public String getSampleProperty() {
-        return sampleProperty;
-    }
-    
-    public void setSampleProperty(String value) {
-        String oldValue = sampleProperty;
-        sampleProperty = value;
-        propertySupport.firePropertyChange(
-                PROP_SAMPLE_PROPERTY, oldValue, sampleProperty);
-    }
-    
-    public void addPropertyChangeListener(PropertyChangeListener listener) {
-        propertySupport.addPropertyChangeListener(listener);
-    }
-    
-    public void removePropertyChangeListener(PropertyChangeListener listener) {
-        propertySupport.removePropertyChangeListener(listener);
     }
 }

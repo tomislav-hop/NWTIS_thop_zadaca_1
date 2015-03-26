@@ -28,6 +28,8 @@ public class SlanjeZahtjeva extends Thread {
     private int brojPonavljanja;
     private int cekaj;
     private String dobivenaKomanda;
+    private int brojPokusaja;
+    private int vrijemeSpavanja;
 
     @Override
     public void interrupt() {
@@ -39,70 +41,97 @@ public class SlanjeZahtjeva extends Thread {
         InputStream is = null;
         OutputStream os = null;
         Socket socket = null;
+        int brojNeuspjelihPokusaja;
+        boolean spavanje = false;
 
         //Ponovi slanje koliko puta je zadano
         for (int i = 0; i < brojPonavljanja; i++) {
+
+            brojNeuspjelihPokusaja = 0;
             System.out.println("Ponavljanje broj: " + i);
-            try {
-                TimeUnit.SECONDS.sleep(cekaj);
-            } catch (InterruptedException ex) {
-                Logger.getLogger(SlanjeZahtjeva.class.getName()).log(Level.SEVERE, null, ex);
-            }
-            try {
 
-                socket = new Socket(server, port);
-                os = socket.getOutputStream();
-                is = socket.getInputStream();
-                String komanda = "";
-
-                if (lozinka.isEmpty() && dobivenaKomanda.isEmpty()) {
-                    komanda = "USER " + korisnik + ";TIME;";
-                } else {
-                    komanda = "USER " + korisnik + "; PASSWD " + lozinka + ";" + dobivenaKomanda + ";";
-
+            while (true) {
+                if(brojNeuspjelihPokusaja > 0){
+                System.out.println("brojNeuspjelihPokusajaj: " + brojNeuspjelihPokusaja);
                 }
-                os.write(komanda.getBytes());
-                os.flush();
-                socket.shutdownOutput();
+                spavanje = false;
+                try {
+                    TimeUnit.SECONDS.sleep(cekaj);
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(SlanjeZahtjeva.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                try {
 
-                StringBuilder sb = new StringBuilder();
-                while (true) {
-                    int znak = is.read();
-                    if (znak == -1) {
-                        break;
+                    socket = new Socket(server, port);
+                    os = socket.getOutputStream();
+                    is = socket.getInputStream();
+                    String komanda = "";
+
+                    if (lozinka.isEmpty() && dobivenaKomanda.isEmpty()) {
+                        komanda = "USER " + korisnik + ";TIME;";
+                    } else {
+                        komanda = "USER " + korisnik + "; PASSWD " + lozinka + ";" + dobivenaKomanda + ";";
+
                     }
-                    sb.append((char) znak);
+                    os.write(komanda.getBytes());
+                    os.flush();
+                    socket.shutdownOutput();
+
+                    StringBuilder sb = new StringBuilder();
+                    while (true) {
+                        int znak = is.read();
+                        if (znak == -1) {
+                            break;
+                        }
+                        sb.append((char) znak);
+                    }
+
+                    System.out.println(sb.toString());
+
+                } catch (IOException ex) {
+                    Logger.getLogger(SlanjeZahtjeva.class.getName()).log(Level.SEVERE, null, ex);
+                    brojNeuspjelihPokusaja++;
+                    spavanje = true;
                 }
 
-                System.out.println(sb.toString());
+                if (is != null) {
+                    try {
+                        is.close();
+                    } catch (IOException ex) {
+                        Logger.getLogger(ObradaZahtjeva.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
 
-            } catch (IOException ex) {
-                Logger.getLogger(SlanjeZahtjeva.class.getName()).log(Level.SEVERE, null, ex);
+                if (os != null) {
+                    try {
+                        os.close();
+                    } catch (IOException ex) {
+                        Logger.getLogger(ObradaZahtjeva.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+
+                if (socket != null) {
+                    try {
+                        socket.close();
+                        //this.stanje = StanjeDretve.Slobodna;
+                    } catch (IOException ex) {
+                        Logger.getLogger(ObradaZahtjeva.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+
+                if (brojNeuspjelihPokusaja == brojPokusaja) {
+                    break;
+                }
+                if (spavanje) {
+                    try {
+                        TimeUnit.SECONDS.sleep(vrijemeSpavanja);
+                    } catch (InterruptedException ex) {
+                        Logger.getLogger(SlanjeZahtjeva.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
             }
         }
-            if (is != null) {
-                try {
-                    is.close();
-                } catch (IOException ex) {
-                    Logger.getLogger(ObradaZahtjeva.class.getName()).log(Level.SEVERE, null, ex);
-                }
-            }
 
-            if (os != null) {
-                try {
-                    os.close();
-                } catch (IOException ex) {
-                    Logger.getLogger(ObradaZahtjeva.class.getName()).log(Level.SEVERE, null, ex);
-                }
-            }
-
-            try {
-                socket.close();
-            } catch (IOException ex) {
-                Logger.getLogger(ObradaZahtjeva.class.getName()).log(Level.SEVERE, null, ex);
-            }
-
-        
     }
 
     @Override
@@ -142,6 +171,12 @@ public class SlanjeZahtjeva extends Thread {
         this.dobivenaKomanda = dobivenaKomanda;
     }
 
-    
+    public void setBrojPokusaja(int brojPokusaja) {
+        this.brojPokusaja = brojPokusaja;
+    }
+
+    public void setVrijemeSpavanja(int vrijemeSpavanja) {
+        this.vrijemeSpavanja = vrijemeSpavanja;
+    }
 
 }

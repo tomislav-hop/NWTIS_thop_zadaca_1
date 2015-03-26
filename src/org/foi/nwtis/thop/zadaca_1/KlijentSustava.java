@@ -112,6 +112,8 @@ public class KlijentSustava {
                 sz.setBrojPonavljanja(brPonavljanja);
                 sz.setCekaj(cekaj);
                 sz.setKorisnik(this.mParametri.group(3));
+                sz.setBrojPokusaja(Integer.parseInt(konfig.dajPostavku("brojPokusajaProblema")));
+                sz.setVrijemeSpavanja(Integer.parseInt(konfig.dajPostavku("pauzaProblema")));
                 sz.setLozinka("");
                 sz.setDobivenaKomanda("");
                 sz.start();
