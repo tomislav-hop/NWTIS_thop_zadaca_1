@@ -27,6 +27,9 @@ public class ServerSustava implements Slusac{
     protected Matcher mParametri;
     int brojacDretvi = 0;
     private int pauzaServera = 0;
+    
+    private ThreadGroup stopS;
+    private Socket stopSocket;
 
     //U KONTSTRUKTORU MORAMO KORSITITI EXCEPTION JER NE MOZEMO KORISTITI RETURN
     public ServerSustava(String parametri) throws Exception {
@@ -79,6 +82,7 @@ public class ServerSustava implements Slusac{
         se.start();
         int brojDretvi = Integer.parseInt(konfig.dajPostavku("brojDretvi"));
         ThreadGroup tg = new ThreadGroup("thop");
+        stopS = tg;
         ObradaZahtjeva[] dretve = new ObradaZahtjeva[brojDretvi];
 
         for (int i = 0; i < brojDretvi; i++) {
@@ -91,6 +95,7 @@ public class ServerSustava implements Slusac{
             ServerSocket ss = new ServerSocket(port);
             while (true) {
                 Socket socket = ss.accept();
+                stopSocket = socket;
                 ObradaZahtjeva oz = dajSlobodnuDretvu(dretve, brojDretvi);
                 
                 //EVENT LISTENER
@@ -110,6 +115,7 @@ public class ServerSustava implements Slusac{
                     }*/
                     oz.setPauzaServera(pauzaServera);
                     oz.slusac = this;
+                    oz.setKonfig(konfig);
 
                     new Thread(oz).start();
 
@@ -173,6 +179,20 @@ public class ServerSustava implements Slusac{
         if(p == 1)
         {
             System.out.println("Pauziranje servera.");
+        }
+        else if(p == 3)
+        {
+            try {
+                System.exit(0);
+                //TODO Serijaliziraj podatke ovdje
+                
+            } catch (Exception e) {              
+                    ObradaZahtjeva oz = new ObradaZahtjeva(stopS, "ERROR");
+                    oz.setPorukaGreske("ERROR 03; Greska kod prekida rada ili kod serijalizacije podataka");
+                    oz.setSocket(stopSocket);
+                    oz.start();
+            }
+            
         }
         else{
             System.out.println("Start servera.");}

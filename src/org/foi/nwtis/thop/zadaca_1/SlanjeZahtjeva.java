@@ -143,7 +143,10 @@ public class SlanjeZahtjeva extends Thread {
                  if (porukaPrimljena) {
                     Date zavrsnoVrijeme = new Date();
                     brojNeuspjelihPokusaja=0;
-                    intervalFix(zavrsnoVrijeme, pocetnoVrijeme);
+                    if(intervalFix(zavrsnoVrijeme, pocetnoVrijeme))
+                    {
+                        brojPonavljanja++;
+                    }
                     //System.out.println("POCETNO VRIJEME JE: " + dateFormat.format(zavrsnoVrijeme));
                     break;
                 }
@@ -152,6 +155,12 @@ public class SlanjeZahtjeva extends Thread {
                     int duzinaSpavanja = (brojNeuspjelihPokusaja + 1) * pauzaProblema;
                     //if(duzinaSpavanja<=)
                     //TODO PROVJERI KAK SE OVO TREBA PONASATI
+                    
+                    if(duzinaSpavanja > intervalDretve)
+                    {
+                        intervalDretve = intervalDretve*2;
+                    }
+                    
                     try {
                         TimeUnit.SECONDS.sleep(duzinaSpavanja);
                     } catch (InterruptedException ex) {
@@ -163,7 +172,9 @@ public class SlanjeZahtjeva extends Thread {
 
     }
 
-    public void intervalFix(Date zavrsnoVrijeme, Date pocetnoVrijeme) {
+    //Funkcija koja vraća false ako je trajanje dretve manje od intervala dretve i sleepa do intervala dretve kako bi svaki ciklus dovoljno dugo trajao
+    //Ako je trajanje dretve duze onda vraca true i povecavamo broj ponavljanja za jedan gore u kodu kako bi smanjili broj ciklusa
+    public boolean intervalFix(Date zavrsnoVrijeme, Date pocetnoVrijeme) {
         long razlikaVremena = zavrsnoVrijeme.getTime() - pocetnoVrijeme.getTime();
                     //System.out.println("Trajalo je: " + razlikaVremena);
         //System.out.println("INTERVAL DRETVE: " + intervalDretve);
@@ -173,10 +184,17 @@ public class SlanjeZahtjeva extends Thread {
             //System.out.println("PRICEKAJ JOS: " + pricekajJos);
             try {
                 sleep(pricekajJos);
+                return false;
             } catch (InterruptedException ex) {
                 Logger.getLogger(SlanjeZahtjeva.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
+        else if(razlikaVremena > intervalDretve * 1000)
+        {
+            System.out.println("Trajanje dretve je predugacko preskakanje jednog ciklusa");
+            return true;
+        }
+        return false;
     }
 
     @Override
