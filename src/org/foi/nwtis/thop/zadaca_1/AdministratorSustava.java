@@ -92,6 +92,7 @@ public class AdministratorSustava {
         sz.setBrojPokusajaProblema(1);
         sz.setPauzaProblema(0);
         sz.setIntervalDretve(0);
+        sz.setOvoJeAdmin(true);
         
         sz.setDobivenaKomanda(komanda);
 

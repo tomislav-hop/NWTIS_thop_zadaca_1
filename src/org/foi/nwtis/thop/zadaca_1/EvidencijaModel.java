@@ -29,6 +29,8 @@ public class EvidencijaModel implements Serializable {
 
     public synchronized boolean dodajZahtjev(ZahtjevKorisnika zahtjev) {
         //TODO Dovrsiti unos/azuriranje podataka zahtjeva
+        
+        
         return true;
     }
 
