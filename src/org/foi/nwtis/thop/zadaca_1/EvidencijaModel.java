@@ -30,6 +30,10 @@ public class EvidencijaModel implements Serializable {
     public synchronized boolean dodajZahtjev(ZahtjevKorisnika zahtjev) {
         //TODO Dovrsiti unos/azuriranje podataka zahtjeva
         
+        //TESITIRANJE
+        zahtjevi.add(zahtjev);
+        //TESTIRANJE OPET
+        //this.setZahtjevi(zahtjevi);
         
         return true;
     }
@@ -90,7 +94,7 @@ public class EvidencijaModel implements Serializable {
         this.zahtjevi = zahtjevi;
     }
 
-    public class ZahtjevKorisnika {
+    public class ZahtjevKorisnika implements Serializable{
 
         private String vrijeme;
         private String ipAdresa;

@@ -8,13 +8,12 @@ package org.foi.nwtis.thop.zadaca_1;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.List;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  *
@@ -22,63 +21,57 @@ import java.util.List;
  */
 public class Evidencija implements Serializable {
 
-    private List<EvidencijaModel> evidencija;
-    private String evidDat;
-    private String nazivDat;
+    private HashMap<String, EvidencijaModel> evidencijaRad;
+    private String nazivEvidDatoteke;
 
-    public Evidencija(List<EvidencijaModel> evidencija, String evidDat, String nazivDat) {
-        this.evidencija = evidencija;
-        this.evidDat = evidDat;
-        this.nazivDat = nazivDat;
+    public Evidencija(String nazivEvidDatoteke) {
+        this.nazivEvidDatoteke = nazivEvidDatoteke;
+        this.evidencijaRad = new HashMap<>();
     }
 
-    public synchronized List<EvidencijaModel> getEvidencija() {
-        return evidencija;
+    public HashMap<String, EvidencijaModel> getEvidencijaRad() {
+        return evidencijaRad;
     }
 
-    public synchronized void SpremiEvidenciju(Evidencija e) throws IOException {
-        File f = new File(nazivDat);
-        if (f.exists()) {
-            f.delete();
-            SimpleDateFormat sdf = new SimpleDateFormat("YYYYMMdd_hhmmss");
-            String datum = sdf.format(new Date());
-            String ekstenzija = evidDat.split("\\.")[1];
-            String naziv = evidDat.split("\\.")[0];
-            nazivDat = naziv + datum + "." + ekstenzija;
-            f = new File(nazivDat);
-        } else {
-            f = new File(this.evidDat);
-            nazivDat = evidDat;
+    public void setEvidencijaRad(HashMap<String, EvidencijaModel> evidencijaRad) {
+        this.evidencijaRad = evidencijaRad;
+    }
+
+    public synchronized void spremiHashMapu(HashMap<String, EvidencijaModel> map) {
+        try {
+            File fileOne = new File(nazivEvidDatoteke);
+            FileOutputStream fos = new FileOutputStream(fileOne);
+            ObjectOutputStream oos = new ObjectOutputStream(fos);
+
+            oos.writeObject(map);
+            oos.flush();
+            oos.close();
+            fos.close();
+        } catch (Exception e) {
+            System.err.println(e);
         }
 
-        if (f.exists()) {
-            f.delete();
-            FileOutputStream out;
+    }
 
-            out = new FileOutputStream(f);
-            ObjectOutputStream s = new ObjectOutputStream(out);
+    public void citajHashMapu(HashMap<String, EvidencijaModel> map) {
+        try {
+            File toRead = new File(nazivEvidDatoteke);
+            FileInputStream fis = new FileInputStream(toRead);
+            ObjectInputStream ois = new ObjectInputStream(fis);
 
-            s.writeObject(e);
-            s.close();
+            HashMap<String, EvidencijaModel> mapInFile = (HashMap<String, EvidencijaModel>) ois.readObject();
 
-            System.out.println("Evidencija serijalizirana!");
+            ois.close();
+            fis.close();
+
+            for (Map.Entry<String, EvidencijaModel> m : mapInFile.entrySet()) {
+                System.out.println(m.getKey() + " : " + m.getValue());
+                EvidencijaModel ee = (EvidencijaModel) m.getValue();
+                ArrayList<EvidencijaModel.ZahtjevKorisnika> zz = ee.getZahtjevi();
+                System.out.println("HOPNOBO" + zz.get(0).getIpAdresa());
+            }
+        } catch (Exception e) {
+            System.err.println(e);
         }
     }
-    
-    
-    public synchronized Evidencija ucitajEvidenciju(String putanja) throws ClassNotFoundException, IOException {
-        Evidencija e = null;
-        FileInputStream in;
-        File f = new File(putanja);
-        if (f.length() > 0 && f.exists()) {
-            in = new FileInputStream(f);
-            ObjectInputStream s = new ObjectInputStream(in);
-            e = (Evidencija) s.readObject();
-            s.close();
-        } else {
-            System.out.println("Datoteka ne postoji ili ne sadrzi zapise!");
-        }
-        return e;
-    }   
-
 }

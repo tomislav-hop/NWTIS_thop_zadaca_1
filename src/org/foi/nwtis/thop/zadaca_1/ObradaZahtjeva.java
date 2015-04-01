@@ -13,6 +13,7 @@ import java.net.Socket;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -20,10 +21,12 @@ import java.util.regex.Pattern;
 import org.foi.nwtis.thop.konfiguracije.Konfiguracija;
 import org.foi.nwtis.thop.konfiguracije.KonfiguracijaApstraktna;
 import org.foi.nwtis.thop.konfiguracije.NemaKonfiguracije;
+import org.foi.nwtis.thop.zadaca_1.EvidencijaModel.ZahtjevKorisnika;
 
 /**
+ * @author Tomislav Hop
  *
- * @author NWTiS_3
+ * Klasa koja obrađuje sve zahtjeve koje server primi.
  */
 public class ObradaZahtjeva extends Thread {
 
@@ -39,7 +42,8 @@ public class ObradaZahtjeva extends Thread {
     protected Matcher mKomanda;
     private int pauzaServera = 0;
     private boolean stopServera = false;
-
+    HashMap<String, EvidencijaModel> hm = new HashMap<String, EvidencijaModel>();
+    private Date vrijemeDobivanjaKomande;
     public Slusac slusac;
 
     public ObradaZahtjeva(ThreadGroup group, String name) {
@@ -49,8 +53,7 @@ public class ObradaZahtjeva extends Thread {
 
     @Override
     public void interrupt() {
-        //this.stanje = StanjeDretve.Slobodna;
-        super.interrupt(); //To change body of generated methods, choose Tools | Templates.
+        super.interrupt();
     }
 
     @Override
@@ -67,6 +70,7 @@ public class ObradaZahtjeva extends Thread {
             while (true) {
                 int znak = is.read();
                 if (znak == -1) {
+                    vrijemeDobivanjaKomande = new Date();
                     break;
                 }
                 sb.append((char) znak);
@@ -74,27 +78,43 @@ public class ObradaZahtjeva extends Thread {
             }
 
             String poruka = null;
-            //Slusac slusac = new Slusac;
+            /**
+             * Ako je poruka greške prazna nismo settali varijablu porukaGreške
+             * što znači da je sve prošlo uredu na serveru
+             */
             if (porukaGreske.equals("")) {
                 mKomanda = provjeraParametara(sb.toString());
-
+                /**
+                 * Ako komanda poslana odgovara sintaksi regexa možemo ju
+                 * obraditi
+                 */
                 if (mKomanda != null) {
+                    /**
+                     * Ako je komanda poslana TIME znamo da je zahtjev došao od
+                     * korisnika pa provjeravamo ako je server pauziran i ako je
+                     * šaljemo poruku greške
+                     */
                     if (mKomanda.group(7).equals("TIME") && pauzaServera == 1) {
-                        System.out.println("KLIJENT ULAZI U SERVER DOK JE PAUZIRAN!");
-                        //System.out.println("Sada treba javiti gresku klijentu za to sta je poslo dok je pauzirano");
-                        //poruka =  "ERROR 10; Server je pauziran";
                         poruka = "ERROR 10; Server je pauziran";
-
                     }
-
+                    /**
+                     * Ako je komanda poslana TIME znamo da je zahtjev došao od
+                     * korisnika pa provjeravamo ako je server nije pauziran pa
+                     * ispisujemo primljenu poruku i šaljemo poruku sa potrebnim
+                     * odgovorom
+                     */
                     if (mKomanda.group(7).equals("TIME") && pauzaServera == 0) {
                         System.out.println("Primljena poruka: " + sb.toString() + "Dretva: " + this.getName());
                         DateFormat dateFormat = new SimpleDateFormat("YYYY.MM.dd hh:mm:ss");
                         Date date = new Date();
                         poruka = "OK;" + dateFormat.format(date) + "; Dretva: " + this.getName();
+                        /**
+                         * Ako komanda poslana nije TIME onda znamo da se radi o
+                         * administratoru, šaljemo komandu koja je poslana nazad
+                         * i izvršavamo funkcionalnost povezanu za poslanu
+                         * komandu
+                         */
                     } else if (!mKomanda.group(7).equals("TIME")) {
-                        //TODO AKO JE ADMIN SLAO ZAHTJEV
-                        //System.out.println("Komanda poslana serveru je: " + mKomanda.group(7));
                         poruka = "Komanda poslana serveru je: " + mKomanda.group(7);
                         switch (mKomanda.group(7)) {
                             case "PAUSE":
@@ -111,38 +131,40 @@ public class ObradaZahtjeva extends Thread {
                                 }
                                 break;
                             case "CLEAN":
-                                
+
                                 break;
                             case "STAT":
-                               
+
                                 break;
                             case "UPLOAD":
-                                
+
                                 break;
                             default:
                                 poruka = "ERROR 10; Komanda koju ste poslali nije ispravna";
                                 break;
                         }
                     }
-                    /*else{
-                     System.out.println("NESTO NE VALJA!");}*/
-
                 } else {
                     poruka = "ERROR 10; Komanda koju ste poslali nije ispravna";
                 }
             } else {
                 poruka = porukaGreske;
             }
-
+            /**
+             * Slanje poruke
+             */
             if (poruka != null) {
                 os.write(poruka.getBytes());
                 os.flush();
+                DodavanjeZahtjeva(vrijemeDobivanjaKomande.toString(), socket.getInetAddress().toString(), sb.toString(), poruka);
             }
-
         } catch (IOException ex) {
             Logger.getLogger(ObradaZahtjeva.class.getName()).log(Level.SEVERE, null, ex);
         }
 
+        /**
+         * Zatvaranje inputstreama, outputstreama i socketa
+         */
         if (is != null) {
             try {
                 is.close();
@@ -161,16 +183,15 @@ public class ObradaZahtjeva extends Thread {
 
         try {
             socket.close();
-            //this.stanje = StanjeDretve.Slobodna;
         } catch (IOException ex) {
             Logger.getLogger(ObradaZahtjeva.class.getName()).log(Level.SEVERE, null, ex);
         }
 
-        /*try {
-         sleep(20000);
-         } catch (InterruptedException ex) {
-         Logger.getLogger(ObradaZahtjeva.class.getName()).log(Level.SEVERE, null, ex);
-         }*/
+        /**
+         * Došli smo do kraja runa pa postavljamo stanje dretve u slobodno i
+         * provjeravamo ako je postavljena varijabla za pauziranje server i ako
+         * je preko interfacea ju šaljemo serveru
+         */
         this.stanje = StanjeDretve.Slobodna;
         if (stopServera == true) {
             slusac.pauza(3);
@@ -179,9 +200,12 @@ public class ObradaZahtjeva extends Thread {
 
     @Override
     public synchronized void start() {
-        super.start(); //To change body of generated methods, choose Tools | Templates.
+        super.start();
     }
 
+    /**
+     * Svi setteri korišteni za ovu klasu
+     */
     public void setKonfig(Konfiguracija konfig) {
         this.konfig = konfig;
     }
@@ -210,6 +234,41 @@ public class ObradaZahtjeva extends Thread {
         this.pauzaServera = pauzaServera;
     }
 
+    /**
+     *
+     * @param vrijeme
+     * @param ip
+     * @param komanda
+     * @param odgovor
+     *
+     * Metoda koja sprema zahtjeve u hashmapu
+     */
+    public void DodavanjeZahtjeva(String vrijeme, String ip, String komanda, String odgovor) {
+
+        EvidencijaModel em = new EvidencijaModel(this.getName());
+        EvidencijaModel.ZahtjevKorisnika z = em.new ZahtjevKorisnika(vrijeme, ip, komanda, odgovor);
+
+        em.dodajZahtjev(z);
+        em.setPrviZahtjev(null);
+        em.setUkupanBrojZahtjeva(2);
+        em.setUkupnoVrijemeRada(1333);
+        em.setZadnjiZahtjev(null);
+
+        hm.put("STRING", em);
+
+        Evidencija e = new Evidencija("evidDatoekaKlijent");
+        e.setEvidencijaRad(hm);
+        e.spremiHashMapu(hm);
+        e.citajHashMapu(hm);
+
+    }
+
+    /**
+     * @param p
+     * @return
+     *
+     * Metoda koja provjerava parametre zadane putem komandne linija
+     */
     public Matcher provjeraParametara(String p) {
         //TODO txt datoteka
         //String sintaksa = "USER ([^\\\\s]+);(TIME);$";
@@ -227,21 +286,32 @@ public class ObradaZahtjeva extends Thread {
         }
     }
 
+    /**
+     * @return
+     *
+     * Metoda koja postavlja pauzu na 1 što znači da je server pauziran ili
+     * javlja grešku ako već pauziran ili ako podatci za admina nisu ispravni
+     */
     private String pauziranjeServera() {
         String poruka = null;
         if (provjeraLozinke() && pauzaServera == 0) {
-            //System.out.println("PROVJERA JE USPJELA!!!!");
             slusac.pauza(1);
             poruka = "OK";
         } else if (provjeraLozinke() && pauzaServera == 1) {
             poruka = "ERROR 01; Server je vec u stanju pauze";
         } else {
-            //System.out.println("PROVJERA NIJE USPJELA!!!!");
             poruka = "ERROR 00; Korisnicko ime ili lozinka nisu ispravni";
         }
         return poruka;
     }
 
+    /**
+     * @return
+     *
+     * Metoda koja postavlja pauzu na 0 što znači da server nije više pauziran
+     * ili javlja grešku kako server nije ni pauziran ili javlja kako korisnički
+     * podatci za admina nisu točni
+     */
     private String startServera() {
         String poruka = null;
         if (provjeraLozinke() && pauzaServera == 1) {
@@ -256,6 +326,13 @@ public class ObradaZahtjeva extends Thread {
         return poruka;
     }
 
+    /**
+     * @return
+     *
+     * Metoda koja zaustavlja postavlja poruku na OK ako su korisnički podatci
+     * dobri ili javlja grešku. Na osnovi poruke koju vraća gore u kodu
+     * postavljamo vrijednost stopServer na true.
+     */
     private String stopServera() {
         String poruka = null;
         if (provjeraLozinke()) {
@@ -265,21 +342,21 @@ public class ObradaZahtjeva extends Thread {
         }
         return poruka;
     }
-
+    /**
+     * @return
+     *
+     * Metoda koja provjerava korisničke podatke od admina koji se nalaze u
+     * datoteci definiranoj u konfiguraciji
+     */
     private boolean provjeraLozinke() {
         String lozinka = mKomanda.group(1).substring(mKomanda.group(1).lastIndexOf(" ") + 1);
-        //System.out.println("LOZINKA: |" + lozinka + "|");
         String korisnickoIme = mKomanda.group(1).split(";")[0];
-        //System.out.println("KORIME: |" + korisnickoIme + "|");
-
         String datoteka = konfig.dajPostavku("adminDatoteka");
         File dat = new File(datoteka);
-
         if (!dat.exists()) {
             System.out.println("Datoteka administratora ne postoji!");
             return false;
         }
-
         Konfiguracija administratori = null;
         try {
             administratori = KonfiguracijaApstraktna.preuzmiKonfiguraciju(datoteka);
@@ -288,13 +365,11 @@ public class ObradaZahtjeva extends Thread {
             Logger.getLogger(ServerSustava.class.getName()).log(Level.SEVERE, null, ex);
             return false;
         }
-
         if (administratori.postojiPostavka(korisnickoIme)) {
             if (administratori.dajPostavku(korisnickoIme).equals(lozinka)) {
                 return true;
             }
         }
-
         return false;
     }
 }

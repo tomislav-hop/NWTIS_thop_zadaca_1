@@ -6,10 +6,13 @@
 package org.foi.nwtis.thop.zadaca_1;
 
 /**
- *
  * @author Tomislav Hop
+ *
+ * Interface koji koristim kako bi implementirao funkciju pauza u serveru u koju
+ * šaljem jednu vrijednost iz obrade zahtjeva
  */
 public interface Slusac {
+
     public void pauza(int p);
-    
+
 }

@@ -5,23 +5,19 @@
  */
 package org.foi.nwtis.thop.zadaca_1;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.foi.nwtis.thop.konfiguracije.Konfiguracija;
-import org.foi.nwtis.thop.konfiguracije.KonfiguracijaApstraktna;
-import org.foi.nwtis.thop.konfiguracije.NemaKonfiguracije;
 
 /**
- *
  * @author Tomislav Hop
+ *
+ * Klasa koja prima argumente obrađuje iste i na osnovi tih argumenata šalje
+ * ključnu riječ funkciji šalji zahtjev
  */
 public class AdministratorSustava {
 
     protected String parametri;
     protected Matcher mParametri;
-    private Konfiguracija konfig;
 
     public AdministratorSustava(String parametri) throws Exception {
         this.parametri = parametri;
@@ -31,10 +27,18 @@ public class AdministratorSustava {
         }
     }
 
+    /**
+     *
+     * @param p argumenti upisani kod pokretanja
+     * @return
+     *
+     * Metoda koja provjerava parametre zadane putem komandne linija
+     * 
+     * Pomoću regexa provjeravam ako argumenti sadrže potrebne dijelove i jedan
+     * koji može sadržavati samo jednu on svih mogućih ključnih riječi
+     */
     public Matcher provjeraParametara(String p) {
 
-        //TODO korisnik  može sadržavati mala i velika slova, brojeve i znakove: _, -
-        //TODO OVO JE NEST SPOMINJO: String sintaksa1 = "^-server -konf ([^\\s]+\\.(?i)txt|xml)( +-load)?$";
         //TODO txt datoteka
         String sintaksa = "^-admin -s ([^\\s]+) -port (\\d{4}) -u ([^\\s]+) -p ([^\\s]+)( -(pause|start|stop|save|clean|stat|upload ([^\\\\s]+.xml)|download ([^\\\\s]+.xml)))?$";
 
@@ -43,7 +47,6 @@ public class AdministratorSustava {
         Matcher m = pattern.matcher(p);
         boolean status = m.matches();
         if (status) {
-
             return m;
         } else {
             System.out.println("Ne odgovara!");
@@ -51,6 +54,10 @@ public class AdministratorSustava {
         }
     }
 
+    /**
+     * Funkcija za pokretanje administratora koja na osnovi grupa koje se nalaze
+     * u regexu šalje određenu ključnu riječ funkciji saljiZahtjev
+     */
     public void pokreniAdministratora() {
 
         if (mParametri.group(6).equals("pause")) {
@@ -80,6 +87,12 @@ public class AdministratorSustava {
         }
     }
 
+    /**
+     * @param komanda ključna riječ koja određuje što admin želi napraviti
+     *
+     * Funkcija koja prima jedan string koji šalje dretvi za slanje zahtjeva
+     * zajedno sa svim ostalim potrebnim varijablama
+     */
     public void saljiZahtjev(String komanda) {
         SlanjeZahtjeva sz = new SlanjeZahtjeva();
         sz.setServer(this.mParametri.group(1));
@@ -88,14 +101,13 @@ public class AdministratorSustava {
         sz.setLozinka(this.mParametri.group(4));
         sz.setBrojPonavljanja(1);
         sz.setCekaj(0);
-        
+
         sz.setBrojPokusajaProblema(1);
         sz.setPauzaProblema(0);
         sz.setIntervalDretve(0);
         sz.setOvoJeAdmin(true);
-        
-        sz.setDobivenaKomanda(komanda);
 
+        sz.setDobivenaKomanda(komanda);
 
         sz.start();
     }

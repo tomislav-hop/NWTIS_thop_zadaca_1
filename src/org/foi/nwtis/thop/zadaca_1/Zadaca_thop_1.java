@@ -11,14 +11,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- *
- * @author NWTiS_3
+ * @author Tomislav Hop
+ * 
+ * Glavna klasa koja na osnovi parametara iste prosljeđuje drugim klasama.
  */
 public class Zadaca_thop_1 {
 
-    /**
-     * @param args the command line arguments
-     */
     public static void main(String[] args) {
 
         StringBuilder sb = new StringBuilder();
@@ -65,7 +63,6 @@ public class Zadaca_thop_1 {
     }
 
     public Matcher provjeraParametara(String p) {
-        //String sintaksa1 = "^-server -konf ([^\\s]+\\.(?i)txt|xml)( +-load)?$";
         //TODO txt datoteka
         String sintaksa = "(^-server.+)|(^-admin.+)|(^-user.+)|(^-show.+)";
 

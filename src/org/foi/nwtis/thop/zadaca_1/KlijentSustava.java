@@ -16,8 +16,10 @@ import org.foi.nwtis.thop.konfiguracije.KonfiguracijaApstraktna;
 import org.foi.nwtis.thop.konfiguracije.NemaKonfiguracije;
 
 /**
+ * @author Tomislav Hop
  *
- * @author NWTiS_3
+ * Klasa koja na osnovi argumenata stvara jednu dretvu ili random broj dretvi te
+ * pokreće dretve za slanje zahtjeva
  */
 public class KlijentSustava {
 
@@ -29,7 +31,6 @@ public class KlijentSustava {
     private int brPonavljanja = 1;
     private int cekaj = 0;
 
-
     public KlijentSustava(String parametri) throws Exception {
         this.parametri = parametri;
         mParametri = provjeraParametara(parametri);
@@ -38,18 +39,21 @@ public class KlijentSustava {
         }
     }
 
+    /**
+     *
+     * @param p
+     * @return
+     *
+     * Metoda koja provjerava parametre zadane putem komandne linija, 3
+     * opcionalne vrijednosti na kraju regexa
+     */
     public Matcher provjeraParametara(String p) {
-
-        //TODO korisnik  može sadržavati mala i velika slova, brojeve i znakove: _, -
-        //TODO OVO JE NEST SPOMINJO: String sintaksa1 = "^-server -konf ([^\\s]+\\.(?i)txt|xml)( +-load)?$";
         //TODO txt datoteka
         String sintaksa = "^-user -s ([^\\s]+) -port (\\d{4}) -u ([^\\s]+) -konf +([^\\s]+.xml)( -cekaj (\\d{1}))?( -multi)?( -ponavljaj (\\d{1}))?$";
-
         Pattern pattern = Pattern.compile(sintaksa);
         Matcher m = pattern.matcher(p);
         boolean status = m.matches();
         if (status) {
-
             return m;
         } else {
             System.out.println("Ne odgovara!");
@@ -57,6 +61,10 @@ public class KlijentSustava {
         }
     }
 
+    /**
+     * Metoda koja pokreće klijenta te na osnovi opcionalnih parametara dohvaća
+     * vrijednosti iz datoteke konfiguracije
+     */
     public void pokreniKlijenta() {
         String datoteka = mParametri.group(4);
         File dat = new File(datoteka);
@@ -65,59 +73,59 @@ public class KlijentSustava {
             System.out.println("Datoteka konfiguracije ne postoji!");
             return;
         }
-
         konfig = null;
-
         try {
             konfig = KonfiguracijaApstraktna.preuzmiKonfiguraciju(datoteka);
-
-            
-
+            /**
+             * Ako je postavljen argument -cekaj čitamo tu vrijednost iz
+             * parametara i spremamo ju u variablu cekaj
+             */
             if (this.mParametri.group(6) != null) {
                 int cekajBrojSekundi = Integer.parseInt(this.mParametri.group(6));
-                System.out.println("CEKAJ: " + cekajBrojSekundi + " SEKUNDI");
                 cekaj = cekajBrojSekundi;
-                //TimeUnit.SECONDS.sleep(100);
             }
+            /**
+             * Ako je postavljen argument -multi generiramo radom broj od 1 do
+             * maksimalnog broja dretvi te generiramo random razmak od 1 do
+             * maksimalnog razmaka dretvi. Obje maksimalne vrijednosti se nalaze
+             * u datoteci konfiguracije.
+             */
             if (this.mParametri.group(7) != null) {
                 int brojDretvi = Integer.parseInt(konfig.dajPostavku("brojDretvi"));
                 int randomBrojDretvi = randomBroj(1, brojDretvi);
                 brDretvi = randomBrojDretvi;
-                System.out.println("MULTI JE: " + randomBrojDretvi);
-
                 int razmakDretviKonfig = Integer.parseInt(konfig.dajPostavku("razmakDretvi"));
-                //TODO Pitaj novaka
                 int randomBrojRazmak = randomBroj(1, razmakDretviKonfig);
-                System.out.println("RAZMAK JE: " + randomBrojRazmak);
                 razmakDretvi = randomBrojRazmak;
             }
+            /**
+             * Ako je postavljen argument -ponavljaj čitamo broj upisan i
+             * šaljemo ga u dretvu za slanje zahtjeva
+             */
             if (this.mParametri.group(9) != null) {
                 int brojPonavljanja = Integer.parseInt(this.mParametri.group(9));
                 brPonavljanja = brojPonavljanja;
-                System.out.println("BROJ PONAVLJANJA JE: " + brojPonavljanja);
-
             }
-
             String server = this.mParametri.group(1);
             int port = Integer.parseInt(this.mParametri.group(2));
-
+            /**
+             * Ako je postavljen multi ovdje prolazimo kroz for petlju random
+             * broj puta
+             */
             for (int i = 0; i < brDretvi; i++) {
-
+                /**
+                 * Ako je postavljen multi ovdje čekamo između kreiranja svake
+                 * dretve random broj sekundi
+                 */
                 try {
                     TimeUnit.SECONDS.sleep(razmakDretvi);
                 } catch (InterruptedException ex) {
                     Logger.getLogger(KlijentSustava.class.getName()).log(Level.SEVERE, null, ex);
                 }
-
                 int brPokusaja = Integer.parseInt(konfig.dajPostavku("brojPokusajaProblema"));
-                //System.out.println("BROJ POKUSAJA = " + brPokusaja);
                 int pauzaProblema = Integer.parseInt(konfig.dajPostavku("pauzaProblema"));
-                //System.out.println("PAUZA PROBLEMA = " + pauzaProblema);
                 int intervalDretve = Integer.parseInt(konfig.dajPostavku("intervalDretve"));
-                //System.out.println("INTERVAL DRETVE = " + intervalDretve);
-                
                 SlanjeZahtjeva sz = new SlanjeZahtjeva();
-                //sz.setKonfig(konfig);
                 sz.setServer(server);
                 sz.setPort(port);
                 sz.setBrojPonavljanja(brPonavljanja);
@@ -136,6 +144,15 @@ public class KlijentSustava {
         }
     }
 
+    /**
+     *
+     * @param odBroja
+     * @param doBroja
+     * @return
+     *
+     * Funkcija koja vraća random broj od vrijednosti varijable odBroja do
+     * vrijednosti varijable doBroja
+     */
     private int randomBroj(int odBroja, int doBroja) {
         int rBroj = (doBroja - odBroja) + odBroja;
         rBroj = (int) (Math.random() * rBroj) + 1;
