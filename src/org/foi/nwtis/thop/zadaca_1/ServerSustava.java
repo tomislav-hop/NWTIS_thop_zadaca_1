@@ -9,6 +9,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -31,6 +32,10 @@ public class ServerSustava implements Slusac {
     private int pauzaServera = 0;
     private ThreadGroup stopS;
     private Socket stopSocket;
+    private Evidencija e;
+    SerijalizatorEvidencije se;
+    HashMap<String, EvidencijaModel> hm = new HashMap<>();
+    
 
     public ServerSustava(String parametri) throws Exception {
         this.parametri = parametri;
@@ -66,6 +71,9 @@ public class ServerSustava implements Slusac {
      * svaki primljeni zahtjev pokreće dretvu koja će obraditi taj zahtjev
      */
     public void pokreniServer() {
+        
+        
+        
         String datoteka = mParametri.group(1);
         File dat = new File(datoteka);
 
@@ -86,7 +94,7 @@ public class ServerSustava implements Slusac {
             Logger.getLogger(ServerSustava.class.getName()).log(Level.SEVERE, null, ex);
             return;
         }
-        SerijalizatorEvidencije se = new SerijalizatorEvidencije(konfig);
+        se = new SerijalizatorEvidencije(konfig);
         se.start();
         int brojDretvi = Integer.parseInt(konfig.dajPostavku("brojDretvi"));
         ThreadGroup tg = new ThreadGroup("thop");
@@ -123,6 +131,7 @@ public class ServerSustava implements Slusac {
                     oz.setPauzaServera(pauzaServera);
                     oz.slusac = this;
                     oz.setKonfig(konfig);
+                    oz.setHm(hm);
                     new Thread(oz).start();
                 }
 
@@ -216,4 +225,13 @@ public class ServerSustava implements Slusac {
             System.out.println("Start servera.");
         }
     }
+
+    @Override
+    public void spremiMapu(HashMap<String, EvidencijaModel> mapa/*, String dretva*/) {
+        hm = mapa;
+        se.setMapa(hm);
+        //se.setDretva(dretva);
+    }
+    
+    
 }

@@ -6,7 +6,7 @@
 <entry key="evidDatoteka">NWTiS_evidencija.bin</entry>
 <entry key="intervalSerijalizacije">300</entry>
 <entry key="adminDatoteka">NWTiS_administratori.xml</entry>
-<entry key="brojDretvi">6</entry>
+<entry key="brojDretvi">3</entry>
 <entry key="razmakDretvi">10</entry>
 <entry key="intervalDretve">5</entry>
 <entry key="pauzaProblema">3</entry>

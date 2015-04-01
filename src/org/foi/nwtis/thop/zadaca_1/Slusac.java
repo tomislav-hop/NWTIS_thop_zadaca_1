@@ -5,6 +5,8 @@
  */
 package org.foi.nwtis.thop.zadaca_1;
 
+import java.util.HashMap;
+
 /**
  * @author Tomislav Hop
  *
@@ -14,5 +16,6 @@ package org.foi.nwtis.thop.zadaca_1;
 public interface Slusac {
 
     public void pauza(int p);
+    public void spremiMapu(HashMap<String, EvidencijaModel> mapa/*, String dretva*/);
 
 }

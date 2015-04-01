@@ -6,6 +6,7 @@
 package org.foi.nwtis.thop.zadaca_1;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -19,6 +20,9 @@ public class SerijalizatorEvidencije extends Thread {
 
     Konfiguracija konfig;
     boolean kraj;
+    HashMap<String, EvidencijaModel> mapa = new HashMap<String, EvidencijaModel>();
+    Evidencija evid = new Evidencija("evidDatoteka");
+    String dretva = "";
 
     public SerijalizatorEvidencije(Konfiguracija konfig) {
         super();
@@ -29,29 +33,42 @@ public class SerijalizatorEvidencije extends Thread {
     public void setKraj(boolean kraj) {
         this.kraj = kraj;
     }
+
+    public void setDretva(String dretva) {
+        this.dretva = dretva;
+    }
+
     
+    
+    public void setMapa(HashMap<String, EvidencijaModel> mapa) {
+        this.mapa = mapa;
+    }
 
     @Override
     public void interrupt() {
         super.interrupt(); //To change body of generated methods, choose Tools | Templates.
     }
-    
 
     @Override
     public void run() {
+        
+        konfig.dajPostavku("intervalSerijalizacije");
 
         while (kraj == false) {
             try {
-                    TimeUnit.SECONDS.sleep(30);
-                } catch (InterruptedException ex) {
-                    Logger.getLogger(KlijentSustava.class.getName()).log(Level.SEVERE, null, ex);
-                }
-            
-            System.out.println("PROLAZ KROZ DRETVU SERIJALIZACIJE");
-            
-            
-            Evidencija e = new Evidencija("evidDatoteka");
+                TimeUnit.SECONDS.sleep(30);
+            } catch (InterruptedException ex) {
+                Logger.getLogger(KlijentSustava.class.getName()).log(Level.SEVERE, null, ex);
+            }
 
+            System.out.println("PROLAZ KROZ DRETVU I SPREMANJE HASHMAPE");
+
+            if (mapa != null) {
+                evid.spremiHashMapu(mapa/*, dretva*/);
+            }
+
+            evid.citajHashMapu(dretva);
+            //mapa = null;
         }
     }
 

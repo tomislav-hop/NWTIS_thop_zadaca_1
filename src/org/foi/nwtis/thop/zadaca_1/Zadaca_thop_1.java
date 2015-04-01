@@ -41,7 +41,6 @@ public class Zadaca_thop_1 {
         } else if (m.group(2) != null) {
             AdministratorSustava admin = null;
             try {
-                //TODO ADMIN
                 admin = new AdministratorSustava(p);
             } catch (Exception ex) {
                 Logger.getLogger(Zadaca_thop_1.class.getName()).log(Level.SEVERE, null, ex);

@@ -37,10 +37,12 @@ public class Evidencija implements Serializable {
         this.evidencijaRad = evidencijaRad;
     }
 
-    public synchronized void spremiHashMapu(HashMap<String, EvidencijaModel> map) {
+    public synchronized void spremiHashMapu(HashMap<String, EvidencijaModel> map/*, String dretva*/) {
         try {
-            File fileOne = new File(nazivEvidDatoteke);
-            FileOutputStream fos = new FileOutputStream(fileOne);
+            
+            String naziv = nazivEvidDatoteke;
+            File fileOne = new File(naziv);
+            FileOutputStream fos = new FileOutputStream(fileOne/*, true*/);
             ObjectOutputStream oos = new ObjectOutputStream(fos);
 
             oos.writeObject(map);
@@ -53,9 +55,10 @@ public class Evidencija implements Serializable {
 
     }
 
-    public void citajHashMapu(HashMap<String, EvidencijaModel> map) {
+    public void citajHashMapu(String nazivDretve) {
         try {
-            File toRead = new File(nazivEvidDatoteke);
+            String naziv = nazivEvidDatoteke;
+            File toRead = new File(naziv);
             FileInputStream fis = new FileInputStream(toRead);
             ObjectInputStream ois = new ObjectInputStream(fis);
 
@@ -63,12 +66,34 @@ public class Evidencija implements Serializable {
 
             ois.close();
             fis.close();
-
+            System.out.println("-----------------------------------------");
+            System.out.println("-----------------------------------------");
+            System.out.println("-----------------------------------------");
+            System.out.println("-----------------------------------------");
+            System.out.println("-----------------------------------------");
+            System.out.println("-----------------------------------------");
+            System.out.println("mapInFile size: " + mapInFile.size());
+            
             for (Map.Entry<String, EvidencijaModel> m : mapInFile.entrySet()) {
-                System.out.println(m.getKey() + " : " + m.getValue());
+                //System.out.println(m.getKey() + " : " + m.getValue());
+                                           
+                
                 EvidencijaModel ee = (EvidencijaModel) m.getValue();
+                
+                
+               
+                
                 ArrayList<EvidencijaModel.ZahtjevKorisnika> zz = ee.getZahtjevi();
-                System.out.println("HOPNOBO" + zz.get(0).getIpAdresa());
+                System.out.println("--------------PODATCI-OD-DRETVE-" +ee.getOznaka()+ "-------------------");
+                System.out.println("Dretva: " + ee.getOznaka());
+                System.out.println("Velicina arraya je : " + zz.size());
+                System.out.println("----------------ZATHJEVI-------------------------");
+                for (int i = 0; i < zz.size(); i++) {
+                    
+                    System.out.println("Odgovor je : " + zz.get(i).getOdgovor() + "\nIP adresa je : " + zz.get(i).getIpAdresa());
+                    
+                }
+                System.out.println("---------------------------------------------------------\n\n\n");
             }
         } catch (Exception e) {
             System.err.println(e);

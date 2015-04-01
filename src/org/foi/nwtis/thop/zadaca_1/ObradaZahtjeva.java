@@ -12,8 +12,10 @@ import java.io.OutputStream;
 import java.net.Socket;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -42,13 +44,15 @@ public class ObradaZahtjeva extends Thread {
     protected Matcher mKomanda;
     private int pauzaServera = 0;
     private boolean stopServera = false;
-    HashMap<String, EvidencijaModel> hm = new HashMap<String, EvidencijaModel>();
+    HashMap<String, EvidencijaModel> hm = new HashMap<>();/* = /*new HashMap<String, EvidencijaModel>();*/
+
     private Date vrijemeDobivanjaKomande;
     public Slusac slusac;
 
     public ObradaZahtjeva(ThreadGroup group, String name) {
         super(group, name);
         this.stanje = StanjeDretve.Slobodna;
+        //hm = new HashMap<>();
     }
 
     @Override
@@ -140,7 +144,7 @@ public class ObradaZahtjeva extends Thread {
 
                                 break;
                             default:
-                                poruka = "ERROR 10; Komanda koju ste poslali nije ispravna";
+                                poruka = "ERROR 90; Komanda koju ste poslali nije ispravna";
                                 break;
                         }
                     }
@@ -234,6 +238,10 @@ public class ObradaZahtjeva extends Thread {
         this.pauzaServera = pauzaServera;
     }
 
+    public void setHm(HashMap<String, EvidencijaModel> hm) {
+        this.hm = hm;
+    }
+
     /**
      *
      * @param vrijeme
@@ -248,18 +256,50 @@ public class ObradaZahtjeva extends Thread {
         EvidencijaModel em = new EvidencijaModel(this.getName());
         EvidencijaModel.ZahtjevKorisnika z = em.new ZahtjevKorisnika(vrijeme, ip, komanda, odgovor);
 
-        em.dodajZahtjev(z);
+        //EvidencijaModel.ZahtjevKorisnika z2 = em.new ZahtjevKorisnika("KURAC", "KURAC", "KURAC", "KURAC");
+        for (Map.Entry<String, EvidencijaModel> m : hm.entrySet()) {
+            System.out.println("ULAZ PETLJU ONU");
+            EvidencijaModel ee = (EvidencijaModel) m.getValue();
+
+            System.out.println("OZNAKA OD EE : " + ee.getOznaka());
+            System.out.println("OZNAKA OD EM : " + em.getOznaka());
+
+            if (ee.getOznaka().equals(em.getOznaka())) {
+                System.out.println("ULAZ U EVIDENCIJA MODEL I DODAVANJE ZAHTJEVA U POSTOJECU");
+                ArrayList<ZahtjevKorisnika> zahtjevi = ee.getZahtjevi();
+
+                for (int i = 0; i < zahtjevi.size(); i++) {
+                    System.out.println("DODAVANJE OPET ZAHTJEVA BROJ: " + i + zahtjevi.get(i).getOdgovor());
+                    em.dodajZahtjev(zahtjevi.get(i));
+                }
+            }
+        }
+
+        try {
+            System.out.println("DODAVANJE NOVOG ZAHTJEVA!!!!!!!!!!!!!" + z.getOdgovor());
+            em.dodajZahtjev(z);
+            System.err.println("NEMA GRESKE KOD DODAVANJA NOVOG ZAHTJEVA");
+        } catch (Exception e) {
+            System.err.println("GRESKA KOD DODAVANJA NOVOG ZAHTJEVA");
+        }
+
+        // em.dodajZahtjev(z2);
         em.setPrviZahtjev(null);
         em.setUkupanBrojZahtjeva(2);
         em.setUkupnoVrijemeRada(1333);
         em.setZadnjiZahtjev(null);
 
-        hm.put("STRING", em);
+        try {
+            hm.put(this.getName(), em);
+            System.err.println("NEMA GRESKE KOD PUTANJA");
 
-        Evidencija e = new Evidencija("evidDatoekaKlijent");
-        e.setEvidencijaRad(hm);
-        e.spremiHashMapu(hm);
-        e.citajHashMapu(hm);
+        } catch (Exception e) {
+            System.err.println("GRESKA KOD PUTANJA");
+        }
+
+        System.out.println("HM SIZE: " + hm.size());
+
+        slusac.spremiMapu(hm/*, this.getName()*/);
 
     }
 
@@ -342,6 +382,7 @@ public class ObradaZahtjeva extends Thread {
         }
         return poruka;
     }
+
     /**
      * @return
      *
