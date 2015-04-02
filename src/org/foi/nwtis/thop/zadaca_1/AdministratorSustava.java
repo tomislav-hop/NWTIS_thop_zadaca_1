@@ -39,7 +39,6 @@ public class AdministratorSustava {
      */
     public Matcher provjeraParametara(String p) {
 
-        //TODO txt datoteka
         String sintaksa = "^-admin -s ([^\\s]+) -port (\\d{4}) -u ([^\\s]+) -p ([^\\s]+)( -(pause|start|stop|save|clean|stat|upload ([^\\\\s]+.xml)|download ([^\\\\s]+.xml)))?$";
 
         //String sintaksa = "^-admin -s ([^\\s]+) -port (\\d{4}) -u ([^\\s]+) -p ([^\\s]+) -konf +([^\\s]+.xml)( -(pause|start|stop|save|clean|stat|upload ([^\\\\s]+.xml)|download ([^\\\\s]+.xml)))?$";

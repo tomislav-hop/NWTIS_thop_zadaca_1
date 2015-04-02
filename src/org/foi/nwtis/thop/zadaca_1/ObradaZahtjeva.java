@@ -137,13 +137,10 @@ public class ObradaZahtjeva extends Thread {
                                 }
                                 break;
                             case "CLEAN":
-
+                                poruka = startClean();
                                 break;
                             case "STAT":
-
-                                break;
-                            case "UPLOAD":
-
+                                //poruka = startStat();
                                 break;
                             default:
                                 poruka = "ERROR 90; Komanda koju ste poslali nije ispravna";
@@ -328,6 +325,13 @@ public class ObradaZahtjeva extends Thread {
         slusac.spremiMapu(hm);
     }
 
+    /**
+     * @param datum
+     * @return
+     *
+     * Zbog exceptiona u parsiranju datuma morao sam napraviti novi dateformat
+     * sa kojim mogu citati vrijeme zahtjeva koje dobivam
+     */
     public Date popravljanjeDatuma(String datum) {
         String dateStr = datum;
         DateFormat readFormat = new SimpleDateFormat("EEE MMM dd HH:mm:ss z yyyy", Locale.US);
@@ -347,9 +351,6 @@ public class ObradaZahtjeva extends Thread {
      * Metoda koja provjerava parametre zadane putem komandne linija
      */
     public Matcher provjeraParametara(String p) {
-        //TODO txt datoteka
-        //String sintaksa = "USER ([^\\\\s]+);(TIME);$";
-        //String sintaksa = "USER ([^\\\\]+)(; PASSWD ([^\\\\]+))?;([A-Z]+);$";
         String sintaksa = "USER ([^\\\\]+)(;)?(( PASSWD )?([^\\\\]+)?)?(;)([A-Z]+);$";
 
         Pattern pattern = Pattern.compile(sintaksa);
@@ -417,6 +418,52 @@ public class ObradaZahtjeva extends Thread {
         } else {
             poruka = "ERROR 00; Korisnicko ime ili lozinka nisu ispravni";
         }
+        return poruka;
+    }
+
+    /**
+     * Nezavršena metoda
+     *
+     * @return
+     */
+    private String startStat() {
+        String poruka = null;
+        File direktorij = new File(System.getProperty("user.dir"));
+        String evD = konfig.dajPostavku("evidDatoteka");
+        int brojDretvi = Integer.parseInt(konfig.dajPostavku("brojDretvi"));
+        for (File f : direktorij.listFiles()) {
+            System.out.println(f.getName());
+            int[][] poljeZaStat = new int[brojDretvi][2];
+            if (f.getName().startsWith(evD)) {
+                //TODO otvorit svaki file i dodati za svaku dretvu broj i vrijeme trajanja u poljeZaStat
+            }
+        }
+        return poruka;
+    }
+
+    /**
+     * @return
+     *
+     * Metoda koja brise sve file-ove koji počinju sa stringom koji se nalazi u
+     * konfig datoteci
+     */
+    private String startClean() {
+        String poruka = null;
+        try {
+            File direktorij = new File(System.getProperty("user.dir"));
+            String evD = konfig.dajPostavku("evidDatoteka");
+            evD = evD.split("\\.")[0];
+            for (File f : direktorij.listFiles()) {
+                System.out.println(f.getName());
+                if (f.getName().startsWith(evD)) {
+                    f.delete();
+                }
+            }
+            poruka = "OK";
+        } catch (Exception e) {
+            poruka = "ERROR 04; Greška kod brisanja evidencije";
+        }
+
         return poruka;
     }
 

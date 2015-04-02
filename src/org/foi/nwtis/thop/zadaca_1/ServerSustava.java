@@ -55,12 +55,7 @@ public class ServerSustava implements Slusac {
      * Metoda koja provjerava parametre zadane putem komandne linija
      */
     public Matcher provjeraParametara(String p) {
-        //TODO txt datoteka
-        //String sintaksa = "^-server -konf +([^\\s]+.xml)( +-load)?$";
-        //String sintaksa = "^-server -konf +([^\\s]+.(xml|txt))( +-load [^\\\\s]+.bin)$";
-        //String sintaksa = "^-server -konf +([^\\s]+.(txt|xml))( +-load [^\\s]+.bin)$";
-        
-        String sintaksa = "^-server -konf +([^\\s]+.(txt|xml))( -load +([^\\s]+.(bin)))?$";
+        String sintaksa = "^-server -konf +([^\\s]+.(txt|xml))( -load)?$";
         Pattern pattern = Pattern.compile(sintaksa);
         Matcher m = pattern.matcher(p);
         boolean status = m.matches();
@@ -89,14 +84,8 @@ public class ServerSustava implements Slusac {
         try {
             konfig = KonfiguracijaApstraktna.preuzmiKonfiguraciju(datoteka);
 
-            /**
-             * Dohvaćanje unesenog naziva datoteke. Potrebno unesti puni naziv
-             * datoteke. NPR. NWTiS_evidencija20150402_083728.bin
-             */
             if (this.mParametri.group(3) != null) {
-                String loadParametar = this.mParametri.group(3);
-                String datotekaZaLoad = loadParametar.substring(loadParametar.lastIndexOf(" ") + 1);
-                ucitajSerijaliziranuEvidenciju(datotekaZaLoad);
+                ucitajSerijaliziranuEvidenciju();
             }
         } catch (NemaKonfiguracije ex) {
             Logger.getLogger(ServerSustava.class.getName()).log(Level.SEVERE, null, ex);
@@ -148,13 +137,16 @@ public class ServerSustava implements Slusac {
             Logger.getLogger(ServerSustava.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
+
     /**
      * @param datoteka
      *
-     * Prvo provjerimo ako datoteka postoji i ako postoji metoda pokreće citaj
-     * mapu iz klase Evidencija
+     * Prvo provjerimo ako datoteka postoji te ako postoji više dohvaćamo zadnju
+     * kreiranu pa metoda pokreće citaj mapu iz klase Evidencija
      */
-    private void ucitajSerijaliziranuEvidenciju(String datoteka) {
+    private void ucitajSerijaliziranuEvidenciju() {
+
+        String datoteka = getLatestFilefromDir();
         System.out.println("Ucitavanje serijalizirane datoteke");
         File dat = new File(datoteka);
         if (!dat.exists()) {
@@ -164,6 +156,35 @@ public class ServerSustava implements Slusac {
             Evidencija e = new Evidencija(datoteka);
             e.citajHashMapu(datoteka);
         }
+    }
+
+    /**
+     * @return
+     *
+     * Metoda koja vraća zadnju kreiranu datoteku koja počinje sa stringom iz
+     * konfig datoteke
+     */
+    private String getLatestFilefromDir() {
+        File direktorij = new File(System.getProperty("user.dir"));
+        String evD = konfig.dajPostavku("evidDatoteka");
+        evD = evD.split("\\.")[0];
+
+        File najnoviji = null;
+        int i = 0;
+
+        for (File f : direktorij.listFiles()) {
+            if (f.getName().startsWith(evD)) {
+                if (i == 0) {
+                    najnoviji = f;
+                }
+                i = 1;
+                if (najnoviji.lastModified() < f.lastModified()) {
+                    najnoviji = f;
+                }
+            }
+        }
+        System.out.println("Zadnja datoteka evidencije je: " + najnoviji.getName());
+        return najnoviji.getName();
     }
 
     /**
@@ -236,14 +257,12 @@ public class ServerSustava implements Slusac {
         } else if (p == 3) {
             try {
                 String nazivDat = konfig.dajPostavku("evidDatoteka");
-                Evidencija evid = new Evidencija(nazivDat);         
+                Evidencija evid = new Evidencija(nazivDat);
                 DateFormat dateFormat = new SimpleDateFormat("YYYYMMdd_hhmmss");
                 Date date = new Date();
-                String datum = dateFormat.format(date)+"adminSTOP";
+                String datum = dateFormat.format(date);
                 evid.spremiHashMapu(hm, datum, nazivDat);
-                
                 System.exit(0);
-                //TODO Serijaliziraj podatke ovdje
             } catch (Exception e) {
                 ObradaZahtjeva oz = new ObradaZahtjeva(stopS, "ERROR");
                 oz.setPorukaGreske("ERROR 03; Greska kod prekida rada ili kod serijalizacije podataka");

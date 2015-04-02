@@ -69,7 +69,6 @@ public class Zadaca_thop_1 {
     }
 
     public Matcher provjeraParametara(String p) {
-        //TODO txt datoteka
         String sintaksa = "(^-server.+)|(^-admin.+)|(^-user.+)|(^-show.+)";
 
         Pattern pattern = Pattern.compile(sintaksa);

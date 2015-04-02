@@ -10,8 +10,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- *
- * @author NWTiS_3
+ * @author Tomislav Hop
+ * 
+ * Klasa koja otvara datoteku cije je ime zadano u argumentima
  */
 public class PregledSustava {
 
@@ -42,9 +43,6 @@ public class PregledSustava {
     }
 
     public void pokreniPreglednik() {
-        //procitaj naziv datoteke
-        // sa file  napravi instancu novog objekta koji preko necega ucitava datoteku
-        //ili javi gresku
         String datoteka = mParametri.group(1);
         String datotekaZaLoad = datoteka.substring(datoteka.lastIndexOf(" ") + 1);
         System.out.println("DATOTEKA: " + datotekaZaLoad);

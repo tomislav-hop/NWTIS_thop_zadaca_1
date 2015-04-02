@@ -48,7 +48,6 @@ public class KlijentSustava {
      * opcionalne vrijednosti na kraju regexa
      */
     public Matcher provjeraParametara(String p) {
-        //TODO txt datoteka
         //String sintaksa = "^-user -s ([^\\s]+) -port (\\d{4}) -u ([^\\s]+) -konf +([^\\s]+.xml)( -cekaj (\\d{1}))?( -multi)?( -ponavljaj (\\d{1}))?$";
         //-konf +([^\\\\s]+.(txt|xml))
         
