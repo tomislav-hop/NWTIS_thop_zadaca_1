@@ -11,10 +11,12 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.text.DateFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -249,58 +251,93 @@ public class ObradaZahtjeva extends Thread {
      * @param komanda
      * @param odgovor
      *
-     * Metoda koja sprema zahtjeve u hashmapu
+     * Metoda koja hvata argumenete potrebne za spremanje, broji zahtjeve i
+     * racuna vrijeme rada
      */
     public void DodavanjeZahtjeva(String vrijeme, String ip, String komanda, String odgovor) {
-
+        int ukupanBrojZatjeva = 0;
+        String vrijemePrvogZahtjeva = null;
+        String vrijemeDrugogZahtjeva = null;
         EvidencijaModel em = new EvidencijaModel(this.getName());
         EvidencijaModel.ZahtjevKorisnika z = em.new ZahtjevKorisnika(vrijeme, ip, komanda, odgovor);
-
-        //EvidencijaModel.ZahtjevKorisnika z2 = em.new ZahtjevKorisnika("KURAC", "KURAC", "KURAC", "KURAC");
+        /**
+         * Prolazim kroz hashmapu i kroz svaki njezin EvidencijaModel i gledam
+         * ako je oznaka tog EvidencijaModela jednaka novom gore kreiranom
+         * EvidencijaModelu kopiram sve stare zahtjeve u novi i kasnije ubacujem
+         * i novi zahtjev unutar novog EvidencijaModela
+         */
         for (Map.Entry<String, EvidencijaModel> m : hm.entrySet()) {
-            System.out.println("ULAZ PETLJU ONU");
             EvidencijaModel ee = (EvidencijaModel) m.getValue();
-
-            System.out.println("OZNAKA OD EE : " + ee.getOznaka());
-            System.out.println("OZNAKA OD EM : " + em.getOznaka());
-
             if (ee.getOznaka().equals(em.getOznaka())) {
-                System.out.println("ULAZ U EVIDENCIJA MODEL I DODAVANJE ZAHTJEVA U POSTOJECU");
                 ArrayList<ZahtjevKorisnika> zahtjevi = ee.getZahtjevi();
-
+                ukupanBrojZatjeva = zahtjevi.size();
+                /**
+                 * Ako je zahtjev na indeksu 0 onda to vrijeme zapisujem u
+                 * vrijemePrvogZahtjeva, a ako je na zadnjem onda to vrijeme
+                 * upisujem u vrijemeDrugogZahtjeva
+                 */
                 for (int i = 0; i < zahtjevi.size(); i++) {
-                    System.out.println("DODAVANJE OPET ZAHTJEVA BROJ: " + i + zahtjevi.get(i).getOdgovor());
+                    if (i == 0) {
+                        vrijemePrvogZahtjeva = zahtjevi.get(i).getVrijeme();
+                    }
+                    if (i > 0 && i == zahtjevi.size() - 1) {
+                        vrijemeDrugogZahtjeva = zahtjevi.get(i).getVrijeme();
+                    }
                     em.dodajZahtjev(zahtjevi.get(i));
                 }
             }
         }
-
+        /**
+         * Dodavanje novog zahtjeva u EvidencijaModel
+         */
         try {
-            System.out.println("DODAVANJE NOVOG ZAHTJEVA!!!!!!!!!!!!!" + z.getOdgovor());
             em.dodajZahtjev(z);
-            System.err.println("NEMA GRESKE KOD DODAVANJA NOVOG ZAHTJEVA");
+            ukupanBrojZatjeva++;
+
         } catch (Exception e) {
             System.err.println("GRESKA KOD DODAVANJA NOVOG ZAHTJEVA");
         }
+        /**
+         * Postavljanje varijabli od EvidencijaModel
+         */
 
-        // em.dodajZahtjev(z2);
-        em.setPrviZahtjev(null);
-        em.setUkupanBrojZahtjeva(2);
-        em.setUkupnoVrijemeRada(1333);
-        em.setZadnjiZahtjev(null);
-
-        try {
-            hm.put(this.getName(), em);
-            System.err.println("NEMA GRESKE KOD PUTANJA");
-
-        } catch (Exception e) {
-            System.err.println("GRESKA KOD PUTANJA");
+        if (vrijemeDrugogZahtjeva == null) {
+            em.setPrviZahtjev(popravljanjeDatuma(vrijeme));
+            em.setZadnjiZahtjev(popravljanjeDatuma(vrijeme));
+        } else {
+            em.setPrviZahtjev(popravljanjeDatuma(vrijemePrvogZahtjeva));
+            em.setZadnjiZahtjev(popravljanjeDatuma(vrijemeDrugogZahtjeva));
         }
 
-        System.out.println("HM SIZE: " + hm.size());
+        em.setUkupanBrojZahtjeva(ukupanBrojZatjeva);
+        /**
+         * Izračun rada dretve
+         */
+        int vrijemeRada = ukupanBrojZatjeva * Integer.parseInt(konfig.dajPostavku("intervalDretve"));
+        em.setUkupnoVrijemeRada(vrijemeRada);
 
-        slusac.spremiMapu(hm/*, this.getName()*/);
+        /**
+         * stavljanje novog EvidencijaModela unutar hashmape
+         */
+        try {
+            hm.put(this.getName(), em);
 
+        } catch (Exception e) {
+            System.err.println("GRESKA KOD .put");
+        }
+        slusac.spremiMapu(hm);
+    }
+
+    public Date popravljanjeDatuma(String datum) {
+        String dateStr = datum;
+        DateFormat readFormat = new SimpleDateFormat("EEE MMM dd HH:mm:ss z yyyy", Locale.US);
+        Date date = null;
+        try {
+            date = readFormat.parse(dateStr);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        return date;
     }
 
     /**

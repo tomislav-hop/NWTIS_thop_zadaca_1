@@ -14,7 +14,8 @@ import java.util.regex.Pattern;
  * @author NWTiS_3
  */
 public class PregledSustava {
-     protected String parametri;
+
+    protected String parametri;
     protected Matcher mParametri;
 
     public PregledSustava(String parametri) throws Exception {
@@ -44,18 +45,16 @@ public class PregledSustava {
         //procitaj naziv datoteke
         // sa file  napravi instancu novog objekta koji preko necega ucitava datoteku
         //ili javi gresku
-
         String datoteka = mParametri.group(1);
-        File dat = new File(datoteka);
-
+        String datotekaZaLoad = datoteka.substring(datoteka.lastIndexOf(" ") + 1);
+        System.out.println("DATOTEKA: " + datotekaZaLoad);
+        File dat = new File(datotekaZaLoad);
         if (!dat.exists()) {
             System.out.println("Datoteka konfiguracije ne postoji!");
             return;
         }
-
-        //TODO sami dovrsiti;
+        Evidencija e = new Evidencija(datoteka);
+        e.citajHashMapu(datoteka);
         return;
-       
-       }
-    
+    }
 }

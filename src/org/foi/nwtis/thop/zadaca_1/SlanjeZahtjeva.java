@@ -182,8 +182,7 @@ public class SlanjeZahtjeva extends Thread {
                 if (spavanje) {
                     Date zavrsnoVrijeme = new Date();
                     int interval = intervalFix(zavrsnoVrijeme, pocetnoVrijeme, brojNeuspjelihPokusaja);
-                    i = i + interval;
-                    System.out.println("i = " + i);
+                    i = i + interval;                  
                 }
             }
         }

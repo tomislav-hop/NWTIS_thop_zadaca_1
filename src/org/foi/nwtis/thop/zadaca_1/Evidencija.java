@@ -14,6 +14,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import org.foi.nwtis.thop.konfiguracije.Konfiguracija;
 
 /**
  *
@@ -37,14 +38,15 @@ public class Evidencija implements Serializable {
         this.evidencijaRad = evidencijaRad;
     }
 
-    public synchronized void spremiHashMapu(HashMap<String, EvidencijaModel> map/*, String dretva*/) {
+    public synchronized void spremiHashMapu(HashMap<String, EvidencijaModel> map, String datum, String nazivDat) {
         try {
-            
-            String naziv = nazivEvidDatoteke;
+            String prviDio = nazivDat.split("\\.")[0];
+            String drugiDio = nazivDat.split("\\.")[1];
+            String naziv = prviDio + datum + "." + drugiDio;
+            System.out.println("Spremljena datoteka: " + naziv);
             File fileOne = new File(naziv);
-            FileOutputStream fos = new FileOutputStream(fileOne/*, true*/);
+            FileOutputStream fos = new FileOutputStream(fileOne);
             ObjectOutputStream oos = new ObjectOutputStream(fos);
-
             oos.writeObject(map);
             oos.flush();
             oos.close();
@@ -61,39 +63,29 @@ public class Evidencija implements Serializable {
             File toRead = new File(naziv);
             FileInputStream fis = new FileInputStream(toRead);
             ObjectInputStream ois = new ObjectInputStream(fis);
-
             HashMap<String, EvidencijaModel> mapInFile = (HashMap<String, EvidencijaModel>) ois.readObject();
-
             ois.close();
             fis.close();
-            System.out.println("-----------------------------------------");
-            System.out.println("-----------------------------------------");
-            System.out.println("-----------------------------------------");
-            System.out.println("-----------------------------------------");
-            System.out.println("-----------------------------------------");
-            System.out.println("-----------------------------------------");
-            System.out.println("mapInFile size: " + mapInFile.size());
-            
+            System.out.println("\n------------ISPIS-SERIJALIZIRANE-DATOTEKE----------------");
+            //System.out.println("mapInFile size: " + mapInFile.size());
+
             for (Map.Entry<String, EvidencijaModel> m : mapInFile.entrySet()) {
-                //System.out.println(m.getKey() + " : " + m.getValue());
-                                           
-                
                 EvidencijaModel ee = (EvidencijaModel) m.getValue();
-                
-                
-               
-                
                 ArrayList<EvidencijaModel.ZahtjevKorisnika> zz = ee.getZahtjevi();
-                System.out.println("--------------PODATCI-OD-DRETVE-" +ee.getOznaka()+ "-------------------");
-                System.out.println("Dretva: " + ee.getOznaka());
-                System.out.println("Velicina arraya je : " + zz.size());
-                System.out.println("----------------ZATHJEVI-------------------------");
+                System.out.println("---------------PODATCI-OD-DRETVE-" + ee.getOznaka() + "-------------------");
+                System.out.println("Vrijeme prvog zahtjeva: " + ee.getPrviZahtjev());
+                System.out.println("Vrijeme zadnjeg zahtjeva: " + ee.getZadnjiZahtjev());
+                System.out.println("Ukupno vrijeme rada: " + ee.getUkupnoVrijemeRada() + " sekundi");
+                System.out.println("Broj zahtjeva: " + ee.getUkupanBrojZahtjeva());
+                //System.out.println("Velicina arraya je : " + zz.size());
+                System.out.println("\n-----------------------ZAHTJEVI-------------------------");
                 for (int i = 0; i < zz.size(); i++) {
-                    
-                    System.out.println("Odgovor je : " + zz.get(i).getOdgovor() + "\nIP adresa je : " + zz.get(i).getIpAdresa());
-                    
+                    System.out.println("Odgovor: " + zz.get(i).getOdgovor());
+                    System.out.println("IP adresa: " + zz.get(i).getIpAdresa());
+                    System.out.println("Komanda: " + zz.get(i).getZahtjev());
+                    System.out.println("Vrijeme dobivanja komande: " + zz.get(i).getVrijeme());
+                    System.out.println("---------------------------------------------------------\n\n");
                 }
-                System.out.println("---------------------------------------------------------\n\n\n");
             }
         } catch (Exception e) {
             System.err.println(e);

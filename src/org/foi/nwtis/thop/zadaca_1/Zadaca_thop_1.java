@@ -54,8 +54,15 @@ public class Zadaca_thop_1 {
                 Logger.getLogger(Zadaca_thop_1.class.getName()).log(Level.SEVERE, null, ex);
             }
             klijent.pokreniKlijenta();
-        } else if (m.group(4) != null) {
-            //TODO PRIKAZ
+        } else if (m.group(4) != null) {         
+            PregledSustava pregled = null;
+            
+            try {
+                pregled = new PregledSustava(p);
+            } catch (Exception ex) {
+                Logger.getLogger(Zadaca_thop_1.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            pregled.pokreniPreglednik();
         } else {
             System.out.println("Parametri ne odgovaraju");
         }

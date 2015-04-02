@@ -6,6 +6,9 @@
 package org.foi.nwtis.thop.zadaca_1;
 
 import java.io.IOException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
@@ -38,8 +41,6 @@ public class SerijalizatorEvidencije extends Thread {
         this.dretva = dretva;
     }
 
-    
-    
     public void setMapa(HashMap<String, EvidencijaModel> mapa) {
         this.mapa = mapa;
     }
@@ -51,24 +52,21 @@ public class SerijalizatorEvidencije extends Thread {
 
     @Override
     public void run() {
-        
-        konfig.dajPostavku("intervalSerijalizacije");
+        int intervalS = Integer.parseInt(konfig.dajPostavku("intervalSerijalizacije"));
+        String nazivDat = konfig.dajPostavku("evidDatoteka");
 
         while (kraj == false) {
             try {
-                TimeUnit.SECONDS.sleep(30);
+                TimeUnit.SECONDS.sleep(intervalS);
             } catch (InterruptedException ex) {
                 Logger.getLogger(KlijentSustava.class.getName()).log(Level.SEVERE, null, ex);
             }
-
-            System.out.println("PROLAZ KROZ DRETVU I SPREMANJE HASHMAPE");
-
             if (mapa != null) {
-                evid.spremiHashMapu(mapa/*, dretva*/);
+                DateFormat dateFormat = new SimpleDateFormat("YYYYMMdd_hhmmss");
+                Date date = new Date();
+                String datum = dateFormat.format(date);
+                evid.spremiHashMapu(mapa, datum, nazivDat);
             }
-
-            evid.citajHashMapu(dretva);
-            //mapa = null;
         }
     }
 

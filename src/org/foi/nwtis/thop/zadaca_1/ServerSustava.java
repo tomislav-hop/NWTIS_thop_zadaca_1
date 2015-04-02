@@ -9,6 +9,9 @@ import java.io.File;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -32,10 +35,10 @@ public class ServerSustava implements Slusac {
     private int pauzaServera = 0;
     private ThreadGroup stopS;
     private Socket stopSocket;
+    Konfiguracija konfig = null;
     private Evidencija e;
     SerijalizatorEvidencije se;
     HashMap<String, EvidencijaModel> hm = new HashMap<>();
-    
 
     public ServerSustava(String parametri) throws Exception {
         this.parametri = parametri;
@@ -53,8 +56,11 @@ public class ServerSustava implements Slusac {
      */
     public Matcher provjeraParametara(String p) {
         //TODO txt datoteka
-        String sintaksa = "^-server -konf +([^\\s]+.xml)( +-load)?$";
-
+        //String sintaksa = "^-server -konf +([^\\s]+.xml)( +-load)?$";
+        //String sintaksa = "^-server -konf +([^\\s]+.(xml|txt))( +-load [^\\\\s]+.bin)$";
+        //String sintaksa = "^-server -konf +([^\\s]+.(txt|xml))( +-load [^\\s]+.bin)$";
+        
+        String sintaksa = "^-server -konf +([^\\s]+.(txt|xml))( -load +([^\\s]+.(bin)))?$";
         Pattern pattern = Pattern.compile(sintaksa);
         Matcher m = pattern.matcher(p);
         boolean status = m.matches();
@@ -71,9 +77,7 @@ public class ServerSustava implements Slusac {
      * svaki primljeni zahtjev pokreće dretvu koja će obraditi taj zahtjev
      */
     public void pokreniServer() {
-        
-        
-        
+
         String datoteka = mParametri.group(1);
         File dat = new File(datoteka);
 
@@ -81,14 +85,18 @@ public class ServerSustava implements Slusac {
             System.out.println("Datoteka konfiguracije ne postoji!");
             return;
         }
-        Konfiguracija konfig = null;
+        konfig = null;
         try {
             konfig = KonfiguracijaApstraktna.preuzmiKonfiguraciju(datoteka);
 
-            if (this.mParametri.group(2) != null) {
-                //TODO učitaj serijaliziranu datoteku
-                String datEvid = konfig.dajPostavku("evidDatoteka");
-                ucitajSerijaliziranuEvidenciju(datEvid);
+            /**
+             * Dohvaćanje unesenog naziva datoteke. Potrebno unesti puni naziv
+             * datoteke. NPR. NWTiS_evidencija20150402_083728.bin
+             */
+            if (this.mParametri.group(3) != null) {
+                String loadParametar = this.mParametri.group(3);
+                String datotekaZaLoad = loadParametar.substring(loadParametar.lastIndexOf(" ") + 1);
+                ucitajSerijaliziranuEvidenciju(datotekaZaLoad);
             }
         } catch (NemaKonfiguracije ex) {
             Logger.getLogger(ServerSustava.class.getName()).log(Level.SEVERE, null, ex);
@@ -140,9 +148,22 @@ public class ServerSustava implements Slusac {
             Logger.getLogger(ServerSustava.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-
+    /**
+     * @param datoteka
+     *
+     * Prvo provjerimo ako datoteka postoji i ako postoji metoda pokreće citaj
+     * mapu iz klase Evidencija
+     */
     private void ucitajSerijaliziranuEvidenciju(String datoteka) {
-        //TODO ucitaj serijaliziranu evidenciju
+        System.out.println("Ucitavanje serijalizirane datoteke");
+        File dat = new File(datoteka);
+        if (!dat.exists()) {
+            System.out.println("Serijalizirana datoteka ne postoji!");
+            return;
+        } else {
+            Evidencija e = new Evidencija(datoteka);
+            e.citajHashMapu(datoteka);
+        }
     }
 
     /**
@@ -199,6 +220,7 @@ public class ServerSustava implements Slusac {
         System.out.println("----------------------------------------------------------");
         return dretve[slobodnaDretva];
     }
+
     /**
      * @param p
      *
@@ -213,6 +235,13 @@ public class ServerSustava implements Slusac {
             System.out.println("Pauziranje servera.");
         } else if (p == 3) {
             try {
+                String nazivDat = konfig.dajPostavku("evidDatoteka");
+                Evidencija evid = new Evidencija(nazivDat);         
+                DateFormat dateFormat = new SimpleDateFormat("YYYYMMdd_hhmmss");
+                Date date = new Date();
+                String datum = dateFormat.format(date)+"adminSTOP";
+                evid.spremiHashMapu(hm, datum, nazivDat);
+                
                 System.exit(0);
                 //TODO Serijaliziraj podatke ovdje
             } catch (Exception e) {
@@ -227,11 +256,9 @@ public class ServerSustava implements Slusac {
     }
 
     @Override
-    public void spremiMapu(HashMap<String, EvidencijaModel> mapa/*, String dretva*/) {
+    public void spremiMapu(HashMap<String, EvidencijaModel> mapa) {
         hm = mapa;
         se.setMapa(hm);
-        //se.setDretva(dretva);
     }
-    
-    
+
 }

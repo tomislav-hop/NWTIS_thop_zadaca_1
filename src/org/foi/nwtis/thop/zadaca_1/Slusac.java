@@ -16,6 +16,6 @@ import java.util.HashMap;
 public interface Slusac {
 
     public void pauza(int p);
-    public void spremiMapu(HashMap<String, EvidencijaModel> mapa/*, String dretva*/);
+    public void spremiMapu(HashMap<String, EvidencijaModel> mapa);
 
 }

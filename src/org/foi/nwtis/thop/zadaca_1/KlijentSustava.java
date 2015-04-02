@@ -49,7 +49,11 @@ public class KlijentSustava {
      */
     public Matcher provjeraParametara(String p) {
         //TODO txt datoteka
-        String sintaksa = "^-user -s ([^\\s]+) -port (\\d{4}) -u ([^\\s]+) -konf +([^\\s]+.xml)( -cekaj (\\d{1}))?( -multi)?( -ponavljaj (\\d{1}))?$";
+        //String sintaksa = "^-user -s ([^\\s]+) -port (\\d{4}) -u ([^\\s]+) -konf +([^\\s]+.xml)( -cekaj (\\d{1}))?( -multi)?( -ponavljaj (\\d{1}))?$";
+        //-konf +([^\\\\s]+.(txt|xml))
+        
+        String sintaksa = "^-user -s ([^\\s]+) -port (\\d{4}) -u ([^\\s]+) -konf +([^\\s]+.(txt|xml))( -cekaj (\\d{1}))?( -multi)?( -ponavljaj (\\d{1}))?$";
+        
         Pattern pattern = Pattern.compile(sintaksa);
         Matcher m = pattern.matcher(p);
         boolean status = m.matches();
@@ -80,9 +84,10 @@ public class KlijentSustava {
              * Ako je postavljen argument -cekaj čitamo tu vrijednost iz
              * parametara i spremamo ju u variablu cekaj
              */
-            if (this.mParametri.group(6) != null) {
-                int cekajBrojSekundi = Integer.parseInt(this.mParametri.group(6));
+            if (this.mParametri.group(7) != null) {
+                int cekajBrojSekundi = Integer.parseInt(this.mParametri.group(7));
                 cekaj = cekajBrojSekundi;
+                System.out.println("Cekaj: " + cekaj);
             }
             /**
              * Ako je postavljen argument -multi generiramo radom broj od 1 do
@@ -90,21 +95,23 @@ public class KlijentSustava {
              * maksimalnog razmaka dretvi. Obje maksimalne vrijednosti se nalaze
              * u datoteci konfiguracije.
              */
-            if (this.mParametri.group(7) != null) {
+            if (this.mParametri.group(8) != null) {
                 int brojDretvi = Integer.parseInt(konfig.dajPostavku("brojDretvi"));
                 int randomBrojDretvi = randomBroj(1, brojDretvi);
                 brDretvi = randomBrojDretvi;
                 int razmakDretviKonfig = Integer.parseInt(konfig.dajPostavku("razmakDretvi"));
                 int randomBrojRazmak = randomBroj(1, razmakDretviKonfig);
                 razmakDretvi = randomBrojRazmak;
+                System.out.println("Broj dretvi generiranih: " + brDretvi+ "\nRazmak izmedju dretvi: "+razmakDretvi);
             }
             /**
              * Ako je postavljen argument -ponavljaj čitamo broj upisan i
              * šaljemo ga u dretvu za slanje zahtjeva
              */
-            if (this.mParametri.group(9) != null) {
-                int brojPonavljanja = Integer.parseInt(this.mParametri.group(9));
+            if (this.mParametri.group(10) != null) {
+                int brojPonavljanja = Integer.parseInt(this.mParametri.group(10));
                 brPonavljanja = brojPonavljanja;
+                System.out.println("Broj ponavljanja: " + brPonavljanja);
             }
             String server = this.mParametri.group(1);
             int port = Integer.parseInt(this.mParametri.group(2));
